@@ -930,13 +930,15 @@ void GyralCurve::saveGyralCurves(const char *filename, bool incJunc)
 	FILE *fp = fopen(filename, "w");
 	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 	{
+		int nPoint = 0;
 		for (int i = 0; i < iter->item.size(); i++)
 		{
 			if (iter->item[i]->isJunction && iter->item[i]->header != iter)
 				if (!incJunc) continue;	// junction
-			if (!iter->item.empty()) fprintf(fp, "%d ", iter->item[i]->vid);
+			fprintf(fp, "%d ", iter->item[i]->vid);
+			nPoint++;
 		}
-		fprintf(fp, "\n");
+		if (nPoint > 1) fprintf(fp, "\n");
 	}
 	fclose(fp);
 }
