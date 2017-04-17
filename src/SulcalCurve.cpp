@@ -943,7 +943,7 @@ void SulcalCurve::saveSulcalCurves(const char *filename, bool incJunc)
 			fprintf(fp, "%d ", iter->item[i]->vid);
 			nPoint++;
 		}
-		if (nPoint > 1) fprintf(fp, "\n");
+		if (nPoint > 0) fprintf(fp, "\n");
 	}
 	fclose(fp);
 }
