@@ -2,7 +2,7 @@
 *	SulcalCurve.cpp
 *
 *	Release: Nov 2013
-*	Update: Mar 2015
+*	Update: Apr 2017
 *
 *	University of North Carolina at Chapel Hill
 *	Department of Computer Science
@@ -941,7 +941,7 @@ void SulcalCurve::saveSulcalCurves(const char *filename, bool incJunc)
 				if (!incJunc) continue;	// junction
 			fprintf(fp, "%d ", iter->item[i]->vid);
 		}
-		fprintf(fp, "\n");
+		if (!iter->item.empty()) fprintf(fp, "\n");
 	}
 	fclose(fp);
 }

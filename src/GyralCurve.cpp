@@ -2,7 +2,7 @@
 *	GyralCurve.cpp
 *
 *	Release: Oct 2014
-*	Update: Oct 2016
+*	Update: Apr 2017
 *
 *	University of North Carolina at Chapel Hill
 *	Department of Computer Science
@@ -934,7 +934,7 @@ void GyralCurve::saveGyralCurves(const char *filename, bool incJunc)
 		{
 			if (iter->item[i]->isJunction && iter->item[i]->header != iter)
 				if (!incJunc) continue;	// junction
-			fprintf(fp, "%d ", iter->item[i]->vid);
+			if (!iter->item.empty()) fprintf(fp, "%d ", iter->item[i]->vid);
 		}
 		fprintf(fp, "\n");
 	}
