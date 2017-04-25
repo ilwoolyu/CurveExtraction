@@ -983,7 +983,10 @@ void SulcalCurve::saveVTK(const char *filename)
 		}
 	}
 	for (int i = 0; i < m_mesh->nVertex(); i++)
+	{
 		fprintf(fp, "%d ", label[i]);
+		if ((i + 1) % 256 == 0) fprintf(fp, "\n");
+	}
 	fprintf(fp, "\n");
 	fclose(fp);
 	
