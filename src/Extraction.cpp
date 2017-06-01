@@ -17,6 +17,7 @@
 
 void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads)
 {
+	if (!inputPoint.empty()) nThreads = 1;
 	if (sulc) se = new SulcalPoint*[nThreads];
 	if (gyr) ge = new GyralPoint*[nThreads];
 	
@@ -88,8 +89,8 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 				if (ge[threadID]->isGPoint(i)) isRidge[i] = true;
 			}
 			#pragma omp critical
-	        {
-	        	done++;
+			{
+				done++;
 				if (done % 1000 == 0)
 				{
 					cout << "\r" << done << "/" << n;

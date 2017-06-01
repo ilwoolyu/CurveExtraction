@@ -63,7 +63,7 @@ public:
 	SulcalCurve(const Mesh *mesh, const bool *valley, const float *curvature = NULL, const float *likelihood = NULL);
 	~SulcalCurve(void);
 	void run(void);
-	void grouping(float threshold1 = 2.5f, float threshold2 = 1.0f, float threshold3 = 1.0f);	// th1: radius, th2: neighbor to be deleted, th3: endpoint radius
+	void grouping(float threshold1 = 2.5f, float threshold2 = 1.0f, float threshold3 = 2.0f);	// th1: radius, th2: neighbor to be deleted, th3: endpoint radius
 	void refineCurves(float threshold = 2.5f);
 	void getSeedPoint(bool *isValley);
 	void saveSulcalPoint(const char *filename);
