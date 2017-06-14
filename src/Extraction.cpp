@@ -107,17 +107,9 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 				char spoint[1024]; sprintf(spoint, "%s.spoint", output.c_str());
 				FILE *fp = fopen(spoint, "w");
 				for (int i = 0; i < mesh->nVertex(); i++)
-				{
-					bool valley = false;
-					for (int j = 0; j < nThreads && !valley; j++)
-						valley = valley || se[j]->isSPoint(i);
-					fprintf(fp, "%d\n", (int)valley);
-				}
+					fprintf(fp, "%d\n", (int)isValley[i]);
 				fclose(fp);
 			}
-			// free resources
-			for (int i = 0; i < nThreads; i++) delete se[i];
-			delete [] se;
 
 			sc = new SulcalCurve(mesh, isValley, direction_s, likelihood);
 		}
@@ -129,17 +121,9 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 				char gpoint[1024]; sprintf(gpoint, "%s.gpoint", output.c_str());
 				FILE *fp = fopen(gpoint, "w");
 				for (int i = 0; i < mesh->nVertex(); i++)
-				{
-					bool ridge = false;
-					for (int j = 0; j < nThreads && !ridge; j++)
-						ridge = ridge || ge[j]->isGPoint(i);
-					fprintf(fp, "%d\n", (int)ridge);
-				}
+					fprintf(fp, "%d\n", (int)isRidge[i]);
 				fclose(fp);
 			}
-			// free resources
-			for (int i = 0; i < nThreads; i++) delete ge[i];
-			delete [] ge;
 
 			gc = new GyralCurve(mesh, isRidge, direction_g, likelihood);
 		}
@@ -211,11 +195,15 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 	// free resources
 	if (sulc)
 	{
+		for (int i = 0; i < nThreads; i++) delete se[i];
+		delete [] se;
 		delete sc;
 		delete [] isValley;
 	}
 	if (gyr)
 	{
+		for (int i = 0; i < nThreads; i++) delete ge[i];
+		delete [] ge;
 		delete gc;
 		delete [] isRidge;
 	}
