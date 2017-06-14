@@ -132,6 +132,9 @@ GyralCurve::~GyralCurve(void)
 	delete [] m_candEndPoint;
 	delete [] m_gyralPoint;
 	delete [] m_curveElem;
+	for (int i = 0; i < m_nPoints; i++)
+		delete [] m_dist[i];
+	delete [] m_dist;
 	delete m_geodesic;
 
 	curveList *iter = m_list;
@@ -145,6 +148,12 @@ GyralCurve::~GyralCurve(void)
 
 void GyralCurve::run(void)
 {
+	cout << "Geodesic distance.. ";
+	fflush(stdout);
+	detectNearestPoints();
+	cout << "Done" << endl;
+	fflush(stdout);
+	
 	cout << "Grouping.. ";
 	fflush(stdout);
 	grouping();
@@ -201,7 +210,7 @@ void GyralCurve::deleteNearestPoints(float threshold)
 			for (int j = 0; j < m_nPoints; j++)
 			{
 				if (m_curveElem[j]->deleted || m_curveElem[j]->header != NULL) continue;
-				if (Vector(iter->item[i]->v, m_curveElem[j]->v).norm() < threshold)
+				if (m_dist[iter->item[i]->id][j] < threshold)
 				{
 					deleteCurveElem(m_curveElem[j]);
 					m_candEndPoint[j] = false;
@@ -218,7 +227,7 @@ void GyralCurve::deleteNearestPoints(curveList *list, float threshold)
 		for (int j = 0; j < m_nPoints; j++)
 		{
 			if (m_curveElem[j]->deleted || m_curveElem[j]->header != NULL) continue;
-			if (Vector(list->item[i]->v, m_curveElem[j]->v).norm() < threshold)
+			if (m_dist[list->item[i]->id][j] < threshold)
 			{
 				deleteCurveElem(m_curveElem[j]);
 				m_candEndPoint[j] = false;
@@ -431,44 +440,53 @@ void GyralCurve::deleteCurveElem(curveElem *elem)
 	elem->isJunction = false;
 }
 
+void GyralCurve::detectNearestPoints(float threshold)
+{
+	m_dist = new float*[m_nPoints];
+	for (int i = 0; i < m_nPoints; i++)
+		m_dist[i] = new float[m_nPoints];
+		
+	for (int i = 0; i < m_nPoints; i++)
+	{
+		m_geodesic->perform_front_propagation(i, (double)threshold);
+		for (int j = i; j < m_nPoints; j++)
+		{
+			// Geodesic distance
+			float dist = m_geodesic->dist()[m_curveElem[j]->vid];
+			
+			// Euclidean distance
+			//float dist = Vector(m_curveElem[i]->v, m_curveElem[j]->v).norm();
+			
+			m_dist[i][j] = (dist <= threshold)? dist: FLT_MAX;
+			m_dist[j][i] = m_dist[i][j];
+		}
+	}
+}
+
 int GyralCurve::detectEndPoints(float threshold, float inner)
 {
 	int c = 0;
 	int n = m_nPoints;
-	vector<int> cand;
 	for (int i = 0; i < n; i++)
 	{
 		m_candEndPoint[i] = false;
 		if (m_curveElem[i]->deleted || m_curveElem[i]->header != NULL) continue;
-		cand.clear();
 		Vector V0(m_curveElem[i]->v);
-		m_geodesic->perform_front_propagation(i, (double)threshold);
-		for (int j = 0; j < n; j++)
-		{
-			if (i == j || m_curveElem[j]->deleted || m_curveElem[j]->header != NULL) continue;
-
-			// Geodesic distance
-			float dist = m_geodesic->dist()[j];
-			
-			/*// Euclidean distance
-			Vector V1(m_curveElem[j]->v);
-			float dist = (V1 - V0).norm();*/
-			if (dist < threshold)
-			{
-				cand.push_back(j);
-			}
-		}
 
 		m_candEndPoint[i] = true;
-		for (int j = 0; j < cand.size() && m_candEndPoint[i]; j++)
+		for (int j = 0; j < n && m_candEndPoint[i]; j++)
 		{
-			Vector V1(m_curveElem[cand[j]]->v);
-			Vector V = (V1 - V0).unit();
-			for (int k = j + 1; k < cand.size(); k++)
+			if (m_dist[i][j] < threshold && m_curveElem[j]->header != NULL)
 			{
-				Vector V2(m_curveElem[cand[k]]->v);
-				float innerProd = V * (V2 - V0).unit();
-				if (innerProd < inner) m_candEndPoint[i] = false;
+				Vector V = (Vector(m_curveElem[j]->v) - V0).unit();
+				for (int k = j + 1; k < n && m_candEndPoint[i]; k++)
+				{
+					if (m_dist[i][k] < threshold && m_curveElem[k]->header != NULL)
+					{
+						float innerProd = V * (Vector(m_curveElem[k]->v) - V0).unit();
+						if (innerProd < inner) m_candEndPoint[i] = false;
+					}
+				}
 			}
 		}
 		if (m_candEndPoint[i]) c++;

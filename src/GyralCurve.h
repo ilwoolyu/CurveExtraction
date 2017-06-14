@@ -57,6 +57,7 @@ private:
 	const Mesh *m_mesh;
 	curveElem **m_curveElem;
 	Geodesic *m_geodesic;
+	float **m_dist;
 
 public:
 	GyralCurve(void);
@@ -79,6 +80,7 @@ public:
 private:
 	int delineation(float threshold1, float threshold2, float threshold3);
 	int detectEndPoints(float threshold, float inner = 0);
+	void detectNearestPoints(float threshold = 3.0f);
 	void reverseCurveOrder(curveList *list);
 	void joinCurves(curveElem *elem1, curveElem *elem2, float inner = cos(PI / 5.0f));
 	void joinCurves(float threshold);
