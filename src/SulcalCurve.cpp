@@ -28,6 +28,7 @@ SulcalCurve::SulcalCurve(const char *mesh, const bool *valley)
 SulcalCurve::SulcalCurve(const Mesh *mesh, const char *valley, const float *curvature, const float *likelihood)
 {
 	m_mesh = mesh;
+	m_geodesic = new Geodesic(m_mesh);
 	int n = m_mesh->nVertex();
 	m_list = NULL;
 
@@ -84,6 +85,7 @@ SulcalCurve::SulcalCurve(const Mesh *mesh, const char *valley, const float *curv
 SulcalCurve::SulcalCurve(const Mesh *mesh, const bool *valley, const float *curvature, const float *likelihood)
 {
 	m_mesh = mesh;
+	m_geodesic = new Geodesic(m_mesh);
 	int n = m_mesh->nVertex();
 	m_list = NULL;
 	
@@ -130,6 +132,7 @@ SulcalCurve::~SulcalCurve(void)
 	delete [] m_candEndPoint;
 	delete [] m_sulcalPoint;
 	delete [] m_curveElem;
+	delete m_geodesic;
 
 	curveList *iter = m_list;
 	while (iter != NULL)
@@ -440,12 +443,17 @@ int SulcalCurve::detectEndPoints(float threshold, float inner)
 		if (m_curveElem[i]->deleted || m_curveElem[i]->header != NULL) continue;
 		cand.clear();
 		Vector V0(m_curveElem[i]->v);
+		m_geodesic->perform_front_propagation(i, (double)threshold);
 		for (int j = 0; j < n; j++)
 		{
 			if (i == j || m_curveElem[j]->deleted || m_curveElem[j]->header != NULL) continue;
 
+			// Geodesic distance
+			float dist = m_geodesic->dist()[j];
+			
+			/*// Euclidean distance
 			Vector V1(m_curveElem[j]->v);
-			float dist = (V1 - V0).norm();
+			float dist = (V1 - V0).norm();*/
 			if (dist < threshold)
 			{
 				cand.push_back(j);
@@ -536,11 +544,11 @@ void SulcalCurve::extendCurves(curveElem *elem, float threshold, float inner1, f
 	}
 }
 
-void SulcalCurve::updateOrientation(curveList *list, curveElem *elem)
+void SulcalCurve::updateOrientation(curveList *list, curveElem *_elem)
 {
 	for (int i = 0; i < list->item.size(); i++)
 	{
-		if (elem != NULL && elem != list->item[i]) continue;
+		if (_elem != NULL && _elem != list->item[i]) continue;
 
 		curveElem *elem = list->item[i];
 

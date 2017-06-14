@@ -28,6 +28,7 @@ GyralCurve::GyralCurve(const char *mesh, const bool *ridge)
 GyralCurve::GyralCurve(const Mesh *mesh, const char *ridge, const float *curvature, const float *likelihood)
 {
 	m_mesh = mesh;
+	m_geodesic = new Geodesic(m_mesh);
 	int n = m_mesh->nVertex();
 	m_list = NULL;
 
@@ -84,6 +85,7 @@ GyralCurve::GyralCurve(const Mesh *mesh, const char *ridge, const float *curvatu
 GyralCurve::GyralCurve(const Mesh *mesh, const bool *ridge, const float *curvature, const float *likelihood)
 {
 	m_mesh = mesh;
+	m_geodesic = new Geodesic(m_mesh);
 	int n = m_mesh->nVertex();
 	m_list = NULL;
 
@@ -130,6 +132,7 @@ GyralCurve::~GyralCurve(void)
 	delete [] m_candEndPoint;
 	delete [] m_gyralPoint;
 	delete [] m_curveElem;
+	delete m_geodesic;
 
 	curveList *iter = m_list;
 	while (iter != NULL)
@@ -439,12 +442,17 @@ int GyralCurve::detectEndPoints(float threshold, float inner)
 		if (m_curveElem[i]->deleted || m_curveElem[i]->header != NULL) continue;
 		cand.clear();
 		Vector V0(m_curveElem[i]->v);
+		m_geodesic->perform_front_propagation(i, (double)threshold);
 		for (int j = 0; j < n; j++)
 		{
 			if (i == j || m_curveElem[j]->deleted || m_curveElem[j]->header != NULL) continue;
 
+			// Geodesic distance
+			float dist = m_geodesic->dist()[j];
+			
+			/*// Euclidean distance
 			Vector V1(m_curveElem[j]->v);
-			float dist = (V1 - V0).norm();
+			float dist = (V1 - V0).norm();*/
 			if (dist < threshold)
 			{
 				cand.push_back(j);

@@ -12,6 +12,7 @@
 
 #include <vector>
 #include "Mesh.h"
+#include "Geodesic/Geodesic.h"
 
 using namespace std;
 
@@ -55,6 +56,7 @@ private:
 	curveList *m_list;
 	const Mesh *m_mesh;
 	curveElem **m_curveElem;
+	Geodesic *m_geodesic;
 
 public:
 	GyralCurve(void);
@@ -63,7 +65,7 @@ public:
 	GyralCurve(const Mesh *mesh, const bool *ridge, const float *curvature = NULL, const float *likelihood = NULL);
 	~GyralCurve(void);
 	void run(void);
-	void grouping(float threshold1 = 2.5f, float threshold2 = 2.0f, float threshold3 = 1.0f);	// th1: radius, th2: neighbor to be deleted, th3: endpoint radius
+	void grouping(float threshold1 = 2.5f, float threshold2 = 2.5f, float threshold3 = 2.0f);	// th1: delineation, th2: neighbor to be deleted, th3: endpoint radius
 	void refineCurves(float threshold = 3.0f);
 	void getSeedPoint(bool *isRidge);
 	void saveGyralPoint(const char *filename);
