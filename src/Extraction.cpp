@@ -2,7 +2,7 @@
 *	Extraction.cpp
 *
 *	Release: Mar 2015
-*	Update: Apr 2017
+*	Update: Jun 2017
 *
 *	University of North Carolina at Chapel Hill
 *	Department of Computer Science
@@ -110,7 +110,7 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 					fprintf(fp, "%d\n", (int)isValley[i]);
 				fclose(fp);
 			}
-
+			for (int i = 1; i < nThreads; i++) delete se[i];
 			sc = new SulcalCurve(mesh, isValley, direction_s, likelihood);
 		}
 		
@@ -124,7 +124,7 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 					fprintf(fp, "%d\n", (int)isRidge[i]);
 				fclose(fp);
 			}
-
+			for (int i = 1; i < nThreads; i++) delete ge[i];
 			gc = new GyralCurve(mesh, isRidge, direction_g, likelihood);
 		}
 	}
@@ -195,14 +195,14 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 	// free resources
 	if (sulc)
 	{
-		for (int i = 0; i < nThreads; i++) delete se[i];
+		delete se[0];
 		delete [] se;
 		delete sc;
 		delete [] isValley;
 	}
 	if (gyr)
 	{
-		for (int i = 0; i < nThreads; i++) delete ge[i];
+		delete ge[0];
 		delete [] ge;
 		delete gc;
 		delete [] isRidge;

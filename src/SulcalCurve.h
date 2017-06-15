@@ -2,7 +2,7 @@
 *	SulcalCurve.h
 *
 *	Release: Nov 2013
-*	Update: Mar 2015
+*	Update: Jun 2017
 *
 *	University of North Carolina at Chapel Hill
 *	Department of Computer Science
@@ -66,14 +66,14 @@ public:
 	SulcalCurve(const Mesh *mesh, const bool *valley, const float *curvature = NULL, const float *likelihood = NULL);
 	~SulcalCurve(void);
 	void run(void);
-	void grouping(float threshold1 = 2.5f, float threshold2 = 2.5f, float threshold3 = 2.0f);	// th1: delineation, th2: neighbor to be deleted, th3: endpoint radius
-	void refineCurves(float threshold = 3.0f);
+	void grouping(float threshold1 = 4.0f, float threshold2 = 2.5f, float threshold3 = 2.0f);	// th1: delineation, th2: neighbor to be deleted, th3: endpoint radius
+	void refineCurves(float threshold = 5.0f);
 	void getSeedPoint(bool *isValley);
 	void saveSulcalPoint(const char *filename);
 	void saveSulcalCurves(const char *filename, bool incJunc = true);
 	void saveVTK(const char *filename);
 	void showInfo(void);
-	void SimplifyCurves(float threshold = 2.5f, float inner = cos(PI / 10.0f));
+	void SimplifyCurves(float threshold = 4.5f, float inner = cos(PI / 10.0f));
 	int nCurves(void);
 	bool testIntegrity(void);
 

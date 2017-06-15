@@ -2,7 +2,7 @@
 *	GyralCurve.cpp
 *
 *	Release: Oct 2014
-*	Update: Apr 2017
+*	Update: Jun 2017
 *
 *	University of North Carolina at Chapel Hill
 *	Department of Computer Science
@@ -448,11 +448,11 @@ void GyralCurve::detectNearestPoints(float threshold)
 		
 	for (int i = 0; i < m_nPoints; i++)
 	{
-		m_geodesic->perform_front_propagation(i, (double)threshold);
+		m_geodesic->perform_front_propagation(m_curveElem[i]->vid, (double)threshold);
 		for (int j = i; j < m_nPoints; j++)
 		{
 			// Geodesic distance
-			float dist = m_geodesic->dist()[m_curveElem[j]->vid];
+			float dist = (float)m_geodesic->dist()[m_curveElem[j]->vid];
 			
 			// Euclidean distance
 			//float dist = Vector(m_curveElem[i]->v, m_curveElem[j]->v).norm();
@@ -511,7 +511,7 @@ void GyralCurve::extendCurves(curveElem *elem, float threshold, float inner1, fl
 		if (m_curveElem[i]->header == elem->header) continue;
 
 		Vector V1(m_curveElem[i]->v);
-		float dist = (V1 - V).norm();
+		float dist = m_dist[elem->id][i];
 
 		if (dist < threshold)
 		{
@@ -641,7 +641,7 @@ GyralCurve::curveElem * GyralCurve::curve(curveElem *current, curveList *header,
 		if (m_curveElem[i]->deleted) continue;
 
 		Vector V1(m_curveElem[i]->v);
-		float dist = (V1 - V).norm();
+		float dist = m_dist[current->id][i];
 
 		if (dist < threshold)
 		{
@@ -658,7 +658,7 @@ GyralCurve::curveElem * GyralCurve::curve(curveElem *current, curveList *header,
 			else
 			{
 				if (adjGroup) continue;
-				else wdist = (V1 - V).cross(current->orientation).norm();
+				else wdist = dist * ((V1 - V).unit()).cross(current->orientation).norm();
 				//wdist = dist * (V1 - V).unit().cross(current->orientation).norm() * (m_curveElem[i]->likelihood * 2 + 1);
 			}
 
@@ -762,9 +762,9 @@ void GyralCurve::joinCurves(float threshold)
 						if (elem1->isEndPoint) cand1 = closestPoint(elem1, subIter);
 						if (elem2->isEndPoint) cand2 = closestPoint(elem2, subIter);
 						float dist1 = FLT_MAX;
-						if (cand1 != NULL) dist1 = Vector(cand1->v, elem1->v).norm();
+						if (cand1 != NULL) dist1 = m_dist[cand1->id][elem1->id];
 						float dist2 = FLT_MAX;
-						if (cand2 != NULL) dist2 = Vector(cand2->v, elem2->v).norm();
+						if (cand2 != NULL) dist2 = m_dist[cand2->id][elem2->id];
 
 						if (minDist < dist1 && dist1 < dist2)
 						{
@@ -845,12 +845,11 @@ GyralCurve::curveElem * GyralCurve::closestPoint(curveElem *elem, curveList *lis
 		return NULL;
 
 	float minDist = FLT_MAX;
-	curveElem *elem2;
+	curveElem *elem2 = NULL;
 
 	for (int i = 0; i < list->item.size(); i++)
 	{
-		Vector V = Vector(elem->v, list->item[i]->v);
-		float dist = V.norm();
+		float dist = m_dist[elem->id][list->item[i]->id];
 		if (minDist > dist)
 		{
 			minDist = dist;

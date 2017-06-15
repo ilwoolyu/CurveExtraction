@@ -2,7 +2,7 @@
 *	GyralCurve.h
 *
 *	Release: Oct 2014
-*	Update: Mar 2015
+*	Update: Jun 2017
 *
 *	University of North Carolina at Chapel Hill
 *	Department of Computer Science
