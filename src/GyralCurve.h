@@ -58,6 +58,7 @@ private:
 	curveElem **m_curveElem;
 	Geodesic *m_geodesic;
 	float **m_dist;
+	float m_threshold1, m_threshold2, m_threshold3;
 
 public:
 	GyralCurve(void);
@@ -74,6 +75,7 @@ public:
 	void saveVTK(const char *filename);
 	void showInfo(void);
 	void SimplifyCurves(float threshold = 2.5f, float inner = cos(PI / 10.0f));
+	void setThreshold(float threshold1, float threshold2, float threshold3);
 	int nCurves(void);
 	bool testIntegrity(void);
 

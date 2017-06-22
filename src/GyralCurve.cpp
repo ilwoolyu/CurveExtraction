@@ -146,6 +146,13 @@ GyralCurve::~GyralCurve(void)
 	}
 }
 
+void GyralCurve::setThreshold(float threshold1, float threshold2, float threshold3)
+{
+	m_threshold1 = threshold1;
+	m_threshold2 = threshold2;
+	m_threshold3 = threshold3;
+}
+
 void GyralCurve::run(void)
 {
 	cout << "Geodesic distance.. ";

@@ -40,6 +40,24 @@
 				<description>Initial seed threshold for sulcal point detection</description>
 				<default>-0.05</default>
 			</float>
+			<float>
+				<longflag>epRad</longflag>
+				<name>eprad</name>
+				<description>A radius for end point detection</description>
+				<default>4</default>
+			</float>
+			<float>
+				<longflag>nhDist</longflag>
+				<name>nhdist</name>
+				<description>A geodesic distance of neighborhoods for curve delineation</description>
+				<default>2</default>
+			</float>
+			<float>
+				<longflag>lsTh</longflag>
+				<name>lsThreshold</name>
+				<description>Threshold for line simplification</description>
+				<default>2.5</default>
+			</float>
 			<integer>
 				<longflag>smoothIter</longflag>
 				<flag>s</flag>

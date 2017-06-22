@@ -47,13 +47,14 @@ private:
 	float *m_shapeIndex;
 	float *m_tangent;
 	float m_away;
+	float m_threshold;
 	int m_nRidge;
 	bool *m_seed;
 	bool *m_ridge;
 
 public:
 	GyralPoint(void);
-	GyralPoint(const Mesh *mesh, int iterTensor);
+	GyralPoint(const Mesh *mesh, int iterTensor, float threshold);
 	~GyralPoint(void);
 	void setSeed(const float threshold = -0.055f);
 	void saveRidgePoint(const char *filename);

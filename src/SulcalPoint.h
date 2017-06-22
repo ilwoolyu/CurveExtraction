@@ -47,13 +47,14 @@ private:
 	float *m_shapeIndex;
 	float *m_tangent;
 	float m_away;
+	float m_threshold;
 	int m_nValley;
 	bool *m_seed;
 	bool *m_valley;
 
 public:
 	SulcalPoint(void);
-	SulcalPoint(const Mesh *mesh, int iterTensor);
+	SulcalPoint(const Mesh *mesh, int iterTensor, float threshold);
 	~SulcalPoint(void);
 	void setSeed(const float threshold = -0.055f);
 	void saveValleyPoint(const char *filename);

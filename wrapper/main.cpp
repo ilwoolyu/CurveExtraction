@@ -32,11 +32,14 @@ int main(int argc, char *argv[])
 	cout << "- Curve simpliciation: " << simp << endl;
 	if (iter > 0) cout << "- NN Surface smoothing: " << iter << endl;
 	if (iterTensor > 0) cout << "- NN Tensor matrix smoothing: " << iterTensor << endl;
+	cout << "- Threshold for line simplification: " << lsThreshold << endl;
+	cout << "- Radius for end point detection: " << eprad << endl;
+	cout << "- Geodesic distance for curve delineation: " << nhdist << endl;
 	cout << "- Inclusion of junction points: " << junc << endl;
 	cout << "- Number of OpenMP threads: " << nThreads << endl;
 	cout << "---------------------------------" << endl;
 
-	extraction(input, output, inputPoint, interm, sseed, gseed, sulc, gyr, simp, iter, iterTensor, junc, nThreads);
+	extraction(input, output, inputPoint, interm, sseed, gseed, sulc, gyr, simp, iter, iterTensor, junc, nThreads, eprad, nhdist, lsThreshold);
 
 	return 0;
 }

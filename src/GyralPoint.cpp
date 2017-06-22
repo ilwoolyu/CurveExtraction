@@ -28,7 +28,7 @@ GyralPoint::GyralPoint(void)
 	m_ridge = NULL;
 }
 
-GyralPoint::GyralPoint(const Mesh *mesh, int iterTensor)
+GyralPoint::GyralPoint(const Mesh *mesh, int iterTensor, float threshold)
 {
 	m_mesh = mesh;
 	const int nVertex = m_mesh->nVertex();
@@ -40,6 +40,7 @@ GyralPoint::GyralPoint(const Mesh *mesh, int iterTensor)
 	m_ridge = new bool[nVertex]; memset(m_ridge, 0, sizeof(bool) * nVertex);
 	m_slicer = new Slicer(m_mesh);
 	setCurvature(iterTensor);
+	m_threshold = threshold;
 }
 
 GyralPoint::~GyralPoint(void)
@@ -195,8 +196,9 @@ float GyralPoint::localMaxima(int idx, vector<float *> *list, vector<bool *> *ri
 			//else projAxis(liter->data, &begin, &end, &m_tangent[liter->sid * 3]);
 			//cout << "ridge Point Detection.. ";
 			//findCandidate(liter, 0.0f, 5.0f, dn.fv(), begin, end);		// freesurfer smooth white
-			findCandidate(liter, 0.0f, 2.5f, dn.fv(), begin, end);		// freesurfer smooth white s20
+			//findCandidate(liter, 0.0f, 2.5f, dn.fv(), begin, end);		// freesurfer smooth white s20
 			//findCandidate(liter, 0.0f, 1.5f, dn.fv(), begin, end);		// ibis white s20
+			findCandidate(liter, 0.0f, m_threshold, dn.fv(), begin, end);		// freesurfer smooth white s20
 			//cout << "Done" << endl;
 			if (query->selected) break;
 		}

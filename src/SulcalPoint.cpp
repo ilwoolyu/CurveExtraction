@@ -28,7 +28,7 @@ SulcalPoint::SulcalPoint(void)
 	m_valley = NULL;
 }
 
-SulcalPoint::SulcalPoint(const Mesh *mesh, int iterTensor)
+SulcalPoint::SulcalPoint(const Mesh *mesh, int iterTensor, float threshold)
 {
 	m_mesh = mesh;
 	const int nVertex = m_mesh->nVertex();
@@ -40,6 +40,7 @@ SulcalPoint::SulcalPoint(const Mesh *mesh, int iterTensor)
 	m_valley = new bool[nVertex]; memset(m_valley, 0, sizeof(bool) * nVertex);
 	m_slicer = new Slicer(m_mesh);
 	setCurvature(iterTensor);
+	m_threshold = threshold;
 }
 
 SulcalPoint::~SulcalPoint(void)
@@ -197,7 +198,8 @@ float SulcalPoint::localMaxima(int idx, vector<float *> *list, vector<bool *> *v
 			//findCandidate(liter, 0.0f, 2.0f, dn.fv(), begin, end);		// freesurfer mid smooth
 			//findCandidate(liter, 0.0f, 1.0f, dn.fv(), begin, end);		// freesurfer pial smooth
 			//findCandidate(liter, 0.0f, 1.5f, dn.fv(), begin, end);		// freesurfer pial smooth s20
-			findCandidate(liter, 0.0f, 2.0f, dn.fv(), begin, end);		// civet mid
+			//findCandidate(liter, 0.0f, 2.0f, dn.fv(), begin, end);		// civet mid
+			findCandidate(liter, 0.0f, m_threshold, dn.fv(), begin, end);
 			//cout << "Done" << endl;
 			if (query->selected) break;
 		}
