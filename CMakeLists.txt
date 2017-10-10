@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(CurveExtraction)
+set(CMAKE_BUILD_TYPE Release)
 
 # CMAKE
 include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
@@ -9,8 +10,8 @@ include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 find_package(SlicerExecutionModel REQUIRED)
 include(${SlicerExecutionModel_USE_FILE})
 include(${GenerateCLP_USE_FILE})
-generateCLP(WRAPPER_XML wrapper/wrapper.xml)
 set(WRAPPER_MAIN wrapper/main.cpp)
+generateCLP(WRAPPER_MAIN ${CMAKE_SOURCE_DIR}/wrapper/wrapper.xml)
 
 # OpenMP
 find_package(OpenMP)
@@ -20,18 +21,16 @@ if (OPENMP_FOUND)
 endif()
 
 # MESH library
-set(MESH_LIB_DIR /home/local/VANDERBILT/lyui/Tools/MeshLib)
-include_directories(${MESH_LIB_DIR}/include ${MESH_LIB_DIR}/include/Util)
-#add_library(Mesh SHARED IMPORTED)
-#set_target_properties(Mesh PROPERTIES IMPORTED_LOCATION ${MESH_LIB_DIR}/res/libMesh.so.1.0)
-link_directories(${MESH_LIB_DIR}/lib)
+find_package(MeshLib REQUIRED)
+include_directories(${Mesh_INCLUDE_DIRS} ${Mesh_INCLUDE_DIRS}/Util)
+link_directories(${Mesh_LIBRARY_DIRS})
 
 # sources
-include_directories(src)
-#set(INCLUDE_FILES src/GyralCurve.h src/GyralPoint.h src/SulcalCurve.h src/SulcalPoint.h src/Extraction.h)
-set(SRC_FILES src/GyralCurve.cpp src/GyralPoint.cpp src/SulcalCurve.cpp src/SulcalPoint.cpp src/Extraction.cpp)
+include_directories(${CMAKE_SOURCE_DIR}/src)
+set(SRC_FILES ${CMAKE_SOURCE_DIR}/src/GyralCurve.cpp ${CMAKE_SOURCE_DIR}/src/GyralPoint.cpp ${CMAKE_SOURCE_DIR}/src/SulcalCurve.cpp ${CMAKE_SOURCE_DIR}/src/SulcalPoint.cpp ${CMAKE_SOURCE_DIR}/src/Extraction.cpp)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ~/bin)
 
 # executable file
-add_executable(CurveExtraction ${SRC_FILES} ${WRAPPER_XML} ${WRAPPER_MAIN})
-target_link_libraries(CurveExtraction Mesh)
+add_executable(CurveExtraction ${SRC_FILES} ${WRAPPER_MAIN})
+target_link_libraries(CurveExtraction ${Mesh_LIBRARIES})
+
