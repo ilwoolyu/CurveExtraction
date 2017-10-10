@@ -2,7 +2,7 @@
 *	Extraction.cpp
 *
 *	Release: Mar 2015
-*	Update: Jun 2017
+*	Update: Oct 2017
 *
 *	University of North Carolina at Chapel Hill
 *	Department of Computer Science
@@ -15,7 +15,7 @@
 #include "Extraction.h"
 #include "SurfaceUtil.h"
 
-void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold)
+void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, bool noVTK)
 {
 	if (!inputPoint.empty()) nThreads = 1;
 	if (sulc) se = new SulcalPoint*[nThreads];
@@ -24,7 +24,6 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 	mesh = new Mesh();
 	mesh->openFile(input.c_str());
 	if (iter > 0) SurfaceUtil::smoothing(mesh, iter);
-	mesh->centering();
 
 	#pragma omp parallel for
 	for (int i = 0; i < nThreads; i++)
@@ -99,8 +98,13 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			}
 		}
 		cout << "\r" << n  << "/" << n << endl;
+	}
+	cout << "Done" << endl;
+	fflush(stdout);
 
-		if (sulc)
+	if (sulc)
+	{
+		if (inputPoint.empty())
 		{
 			if (interm)
 			{
@@ -113,8 +117,47 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			for (int i = 1; i < nThreads; i++) delete se[i];
 			sc = new SulcalCurve(mesh, isValley, direction_s, likelihood);
 		}
+		else
+		{
+			char spoint[1024]; sprintf(spoint, "%s.spoint", inputPoint.c_str());
+			sc = new SulcalCurve(mesh, spoint, direction_s);
+			sc->getSeedPoint(isValley);
+		}
+		sc->setThreshold(nhdist, nhdist, eprad);
+		sc->run();
+		sc->showInfo();
+		if (simp)
+		{
+			fflush(stdout);
+			cout << "Simplifying curves.. ";
+			if (sulc) sc->SimplifyCurves();
+			if (gyr) gc->SimplifyCurves();
+			cout << "Done" << endl;
+			fflush(stdout);
+
+			if (sulc) sc->showInfo();
+			if (gyr) gc->showInfo();
+			fflush(stdout);
+		}
+		cout << "Writing an output file.. ";
+		char sout[1024];
+		sprintf(sout, "%s.scurve", output.c_str());
+		sc->saveSulcalCurves(sout, junc);
+		if (!noVTK)
+		{
+			sprintf(sout, "%s.scurve.vtk", output.c_str());
+			sc->saveVTK(sout);
+		}
+		cout << "Done" << endl;
+		delete se[0];
+		delete [] se;
+		delete sc;
+		delete [] isValley;
+	}
 		
-		if (gyr)
+	if (gyr)
+	{
+		if (inputPoint.empty())
 		{
 			if (interm)
 			{
@@ -127,88 +170,45 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			for (int i = 1; i < nThreads; i++) delete ge[i];
 			gc = new GyralCurve(mesh, isRidge, direction_g, likelihood);
 		}
-	}
-	else
-	{
-		if (sulc)
-		{
-			char spoint[1024]; sprintf(spoint, "%s.spoint", inputPoint.c_str());
-			sc = new SulcalCurve(mesh, spoint, direction_s);
-			sc->getSeedPoint(isValley);
-		}
-		
-		if (gyr)
+		else
 		{
 			char gpoint[1024]; sprintf(gpoint, "%s.gpoint", inputPoint.c_str());
 			gc = new GyralCurve(mesh, gpoint, direction_g);
 			gc->getSeedPoint(isRidge);
 		}
-	}
-	cout << "Done" << endl;
-	fflush(stdout);
-	
-	if (sulc)
-	{
-		sc->setThreshold(nhdist, nhdist, eprad);
-		sc->run();
-		sc->showInfo();
-	}
-	if (gyr)
-	{
 		gc->setThreshold(nhdist, nhdist, eprad);
 		gc->run();
 		gc->showInfo();
-	}
-	fflush(stdout);
+		if (simp)
+		{
+			fflush(stdout);
+			cout << "Simplifying curves.. ";
+			if (sulc) sc->SimplifyCurves();
+			if (gyr) gc->SimplifyCurves();
+			cout << "Done" << endl;
+			fflush(stdout);
 
-	if (simp)
-	{
-		cout << "Simplifying curves.. ";
-		if (sulc) sc->SimplifyCurves();
-		if (gyr) gc->SimplifyCurves();
-		cout << "Done" << endl;
-		fflush(stdout);
-
-		if (sulc) sc->showInfo();
-		if (gyr) gc->showInfo();
-		fflush(stdout);
-	}
-
-	cout << "Writing an output file.. ";
-	if (sulc)
-	{
-		char sout[1024];
-		sprintf(sout, "%s.scurve", output.c_str());
-		sc->saveSulcalCurves(sout, junc);
-		sprintf(sout, "%s.scurve.vtk", output.c_str());
-		sc->saveVTK(sout);
-	}
-	if (gyr)
-	{
+			if (sulc) sc->showInfo();
+			if (gyr) gc->showInfo();
+			fflush(stdout);
+		}
+		cout << "Writing an output file.. ";
 		char gout[1024];
 		sprintf(gout, "%s.gcurve", output.c_str());
 		gc->saveGyralCurves(gout, junc);
-		sprintf(gout, "%s.gcurve.vtk", output.c_str());
-		gc->saveVTK(gout);
-	}
-	cout << "Done" << endl;
-	fflush(stdout);
-	
-	// free resources
-	if (sulc)
-	{
-		delete se[0];
-		delete [] se;
-		delete sc;
-		delete [] isValley;
-	}
-	if (gyr)
-	{
+		if (!noVTK)
+		{
+			sprintf(gout, "%s.gcurve.vtk", output.c_str());
+			gc->saveVTK(gout);
+		}
+		cout << "Done" << endl;
+		fflush(stdout);
 		delete ge[0];
 		delete [] ge;
 		delete gc;
 		delete [] isRidge;
 	}
+		
 	delete [] likelihood;
 	delete mesh;
 }

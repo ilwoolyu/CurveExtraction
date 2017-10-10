@@ -50,7 +50,7 @@
 				<longflag>nhDist</longflag>
 				<name>nhdist</name>
 				<description>A geodesic distance of neighborhoods for curve delineation</description>
-				<default>2</default>
+				<default>4</default>
 			</float>
 			<float>
 				<longflag>lsTh</longflag>
@@ -96,6 +96,11 @@
 				<longflag>junction</longflag>
 				<name>junc</name>
 				<description>Inclusion of junction points in the output curves</description>
+			</boolean>
+			<boolean>
+				<longflag>noVtk</longflag>
+				<name>noVtk</name>
+				<description>No vtk output</description>
 			</boolean>
 	  	</parameters>
 	<acknowledgements></acknowledgements>

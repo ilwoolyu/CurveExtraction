@@ -2,7 +2,7 @@
 *	GyralCurve.cpp
 *
 *	Release: Oct 2014
-*	Update: Jun 2017
+*	Update: Aug 2017
 *
 *	University of North Carolina at Chapel Hill
 *	Department of Computer Science
@@ -15,7 +15,6 @@
 #include <float.h>
 #include "Geom.h"
 #include "GyralCurve.h"
-
 
 GyralCurve::GyralCurve(void)
 {
@@ -155,21 +154,22 @@ void GyralCurve::setThreshold(float threshold1, float threshold2, float threshol
 
 void GyralCurve::run(void)
 {
+	m_gamma = 1;
 	cout << "Geodesic distance.. ";
 	fflush(stdout);
-	detectNearestPoints();
+	detectNearestPoints(m_threshold1);
 	cout << "Done" << endl;
 	fflush(stdout);
 	
 	cout << "Grouping.. ";
 	fflush(stdout);
-	grouping();
+	grouping(m_threshold1, m_threshold2, m_threshold3);
 	cout << "Done" << endl;
 	fflush(stdout);
-
+	
 	cout << "Refining.. ";
 	fflush(stdout);
-	refineCurves();
+	refineCurves(m_threshold1);
 	cout << "Done" << endl;
 	fflush(stdout);
 
@@ -186,45 +186,20 @@ void GyralCurve::run(void)
 
 void GyralCurve::grouping(float threshold1, float threshold2, float threshold3)
 {
-	/*do
-	{
-		group = current;
-		deleteNearestPoints(1.5f);
-		current = delineation(treshold);
-	}
-	while (group != current);*/
-
-	bool cand;
+	int nCurvePrev = 0, nCurve = 0;
 	do
 	{
-		cand = false;
-		deleteNearestPoints(threshold2);
+		nCurvePrev = nCurve;
 		delineation(threshold1, threshold2, threshold3);
-		for (int i = 0; i < m_nPoints && !cand; i++)
-		{
-			cand = m_candEndPoint[i];
-		}
-	}
-	while (cand);
+		deleteNearestPoints(threshold2);
+		nCurve = nCurves();
+	} while (nCurvePrev != nCurve);
 }
 
 void GyralCurve::deleteNearestPoints(float threshold)
 {
 	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
-	{
-		for (int i = 0; i < iter->item.size(); i++)
-		{
-			for (int j = 0; j < m_nPoints; j++)
-			{
-				if (m_curveElem[j]->deleted || m_curveElem[j]->header != NULL) continue;
-				if (m_dist[iter->item[i]->id][j] < threshold)
-				{
-					deleteCurveElem(m_curveElem[j]);
-					m_candEndPoint[j] = false;
-				}
-			}
-		}
-	}
+		deleteNearestPoints(iter, threshold);
 }
 
 void GyralCurve::deleteNearestPoints(curveList *list, float threshold)
@@ -271,14 +246,13 @@ int GyralCurve::delineation(float threshold1, float threshold2, float threshold3
 	curveList *prev;
 	for (prev = m_list; prev != NULL && prev->next != NULL; prev = prev->next);
 
-	//for (int i = 0; i < n; i++)
-	//for (int i = n - 1; i >= 0; i--)
 	for (int c = 0; c < endPointList.size(); c++)
 	{
 		int i = endPointList[c].id;
 		if (m_curveElem[i]->traced || !m_candEndPoint[i] || m_curveElem[i]->deleted || m_curveElem[i]->header != NULL) continue;
 		curveList *list = new curveList;
-		curveElem *endPoint = curve(m_curveElem[i], list, threshold1);
+		//curveElem *endPoint = curve(m_curveElem[i], list, threshold1);
+		curveElem *endPoint = curve_dijkstra(m_curveElem[i], list, threshold1);
 
 		if (list->item.size() == 1)
 		{
@@ -298,7 +272,7 @@ int GyralCurve::delineation(float threshold1, float threshold2, float threshold3
 
 		if (endPoint->header != list) joinCurves(list->item[list->item.size() -1], endPoint);
 
-		deleteNearestPoints(list, threshold2);
+		//deleteNearestPoints(list, threshold2);
 	}
 
 	return nCurves();
@@ -306,6 +280,12 @@ int GyralCurve::delineation(float threshold1, float threshold2, float threshold3
 
 void GyralCurve::deleteCurves(curveList *list)
 {
+	for (int i = 0; i < list->item.size(); i++)
+	{
+		if (list->item[i]->isJunction) deleteJunction(list->item[i], list);
+		else deleteCurveElem(list->item[i]);
+	}
+			
 	if (list->next != NULL) list->next->prev = list->prev;
 	if (list->prev != NULL) list->prev->next = list->next;
 	else m_list = list->next;
@@ -314,127 +294,125 @@ void GyralCurve::deleteCurves(curveList *list)
 	delete list;
 }
 
-void GyralCurve::deleteCurves(float threshold)
+bool GyralCurve::pruneCurves(float threshold)
 {
-	for (curveList *iter = m_list; iter != NULL;)
+	updateCurveLength();
+	float minLen = FLT_MAX;
+	curveList *candidate = NULL; 
+	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 	{
-		curveList *next = iter->next;
-		if (threshold > iter->length && (iter->item[0]->isEndPoint || iter->item[iter->item.size() - 1]->isEndPoint))
+		if (iter->item[0]->isEndPoint || iter->item[iter->item.size() - 1]->isEndPoint)
 		{
-			/*for (int i = 0; i < iter->item.size(); i++)
-				m_candEndPoint[iter->item[i]->id] = true;*/
-			if (iter->item[0]->isJunction) iter->item[0]->nJunctions--;
-			if (iter->item[iter->item.size() - 1]->isJunction) iter->item[iter->item.size() - 1]->nJunctions--;
-			for (int i = 0; i < iter->item.size(); i++)
+			curveElem *elem = NULL;
+			if (iter->item[0]->isJunction) elem = iter->item[0];
+			if (iter->item[iter->item.size() - 1]->isJunction) elem = iter->item[iter->item.size() - 1];
+			float w = 0;
+			if (elem != NULL)
 			{
-				if (iter->item[i]->header == iter)
+				for (curveList *iter1 = m_list; iter1 != NULL; iter1 = iter1->next)
 				{
-					if (iter->item[i]->isJunction)
-						iter->item[i]->header = NULL;
-					else deleteCurveElem(iter->item[i]);
+					if (elem == iter1->item[0])
+						w = max(w, exp(fabs(Vector(elem->direction) * Vector(iter1->item[0]->direction)) / 2));
+					if (elem == iter1->item[iter1->item.size() - 1])
+						w = max(w, exp(fabs(Vector(elem->direction) * Vector(iter1->item[iter1->item.size() - 1]->direction)) / 2));
 				}
 			}
-			deleteCurves(iter);
-		}
-		iter = next;
-	}
-
-	for (int i = 0; i < m_nPoints; i++)
-	{
-		if (m_curveElem[i]->isJunction && m_curveElem[i]->header == NULL && m_curveElem[i]->nJunctions > 0)
-		{
-			findHeader(m_curveElem[i]);
-		}
-	}
-
-	for (int i = 0; i < m_nPoints; i++)
-	{
-		if (m_curveElem[i]->nJunctions == 0)
-		{
-			for (curveList *iter = m_list; iter != NULL; iter = iter->next)
+			else w = 1;
+			if (minLen > iter->length * w)
 			{
-				if (m_curveElem[i] == iter->item[0] || m_curveElem[i] == iter->item[iter->item.size() - 1])
+				minLen = iter->length * w;
+				candidate = iter;
+			}
+		}
+	}
+	if (minLen < threshold)
+	{
+		deleteCurves(candidate);
+		updateCurveLength();
+	}
+	
+	return (minLen < threshold);
+}
+
+void GyralCurve::updateCurveLength(void)
+{
+	// update length of the curves
+	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
+	{
+		iter->length = 0;
+		for (int i = 1; i < iter->item.size(); i++)
+			iter->length += m_dist[iter->item[i]->id][iter->item[i - 1]->id];
+	}
+}
+
+void GyralCurve::deleteJunction(curveElem *elem, curveList *parent)
+{
+	elem->nJunctions--;
+	if (elem->nJunctions == 0)
+	{
+		for (curveList *iter = m_list; iter != NULL; iter = iter->next)
+		{
+			if (iter == parent) continue;
+			if (elem == iter->item[0] || elem == iter->item[iter->item.size() - 1])
+			{
+				elem->isJunction = false;
+				elem->isEndPoint = true;
+				elem->header = iter;
+				break;
+			}
+		}
+	}
+	else if (elem->nJunctions == 1)
+	{
+		curveList *list1 = NULL, *list2 = NULL;
+		for (curveList *iter = m_list; iter != NULL; iter = iter->next)
+		{
+			if (iter == parent) continue;
+			if (elem == iter->item[0] || elem == iter->item[iter->item.size() - 1])
+			{
+				if (list1 == NULL) list1 = iter;
+				else
 				{
-					m_curveElem[i]->isJunction = false;
-					m_curveElem[i]->isEndPoint = true;
-					m_curveElem[i]->header = iter;
+					list2 = iter;
 					break;
 				}
 			}
 		}
-		else if (m_curveElem[i]->nJunctions == 1)
-		{
-			curveList *list1 = NULL, *list2 = NULL;
-			for (curveList *iter = m_list; iter != NULL; iter = iter->next)
-			{
-				if (m_curveElem[i] == iter->item[0] || m_curveElem[i] == iter->item[iter->item.size() - 1])
-				{
-					if (list1 == NULL) list1 = iter;
-					else
-					{
-						list2 = iter;
-						break;
-					}
-				}
-			}
-			m_curveElem[i]->isJunction = false;
-			m_curveElem[i]->isEndPoint = true;
-			m_curveElem[i]->nJunctions = 0;
-			
-			if (list1 == NULL || list2 == NULL) continue;
+		elem->isJunction = false;
+		elem->isEndPoint = false;
+		elem->nJunctions = 0;
 
-			if (list1->item.size() > list2->item.size())
+		if (list1 != NULL && list2 != NULL)
+		{
+			if (list1->item[list1->item.size() - 1] != elem)
+				reverseCurveOrder(list1);
+			if (list2->item[0] != elem)
+				reverseCurveOrder(list2);
+			elem->header = list1;
+			for (int i = 1; i < list2->item.size(); i++)
 			{
-				if (list1->item[list1->item.size() - 1] != m_curveElem[i])
-					reverseCurveOrder(list1);
-				if (list2->item[0] != m_curveElem[i])
-					reverseCurveOrder(list2);
-				m_curveElem[i]->header = list2;
+				list1->item.push_back(list2->item[i]);
+				if (list2->item[i]->header == list2)
+					list2->item[i]->header = list1;
 			}
-			else
-			{
-				if (list1->item[0] != m_curveElem[i])
-					reverseCurveOrder(list1);
-				if (list2->item[list2->item.size() - 1] != m_curveElem[i])
-					reverseCurveOrder(list2);
-				m_curveElem[i]->header = list1;
-				swap(list1, list2);
-			}
-			if (list1->item.size() == 2)
-			{
-				curveElem *elem = NULL;
-				if (list1->item[0]->isJunction)
-				{
-					list1->item[0]->nJunctions--;
-					if (list1->item[0]->header == list1)
-					{
-						list1->item[0]->header = NULL;
-						elem = list1->item[0];
-					}
-					if (list1->item[0]->id < i) i = list1->item[0]->id;
-				}
-				else deleteCurveElem(list1->item[0]);
-				deleteCurves(list1);
-				if (elem != NULL) findHeader(elem);
-			}
-			else
-			{
-				list1->item.pop_back();
-				list1->item[list1->item.size() - 1]->isEndPoint = true;
-				joinCurves(list1->item[list1->item.size() - 1], list2->item[0], 0);
-			}
+			if (list2->next != NULL) list2->next->prev = list2->prev;
+			if (list2->prev != NULL) list2->prev->next = list2->next;
+			else m_list = list2->next;
+
+			list2->item.clear();
+			delete list2;
 		}
 	}
-}
-
-void GyralCurve::findHeader(curveElem *elem)
-{
-	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
+	else
 	{
-		if (elem == iter->item[0] || elem == iter->item[iter->item.size() - 1])
+		for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 		{
-			elem->header = iter;
-			break;
+			if (iter == parent) continue;
+			if (elem == iter->item[0] || elem == iter->item[iter->item.size() - 1])
+			{
+				elem->header = iter;
+				break;
+			}
 		}
 	}
 }
@@ -483,12 +461,12 @@ int GyralCurve::detectEndPoints(float threshold, float inner)
 		m_candEndPoint[i] = true;
 		for (int j = 0; j < n && m_candEndPoint[i]; j++)
 		{
-			if (m_dist[i][j] < threshold && m_curveElem[j]->header != NULL)
+			if (m_dist[i][j] < threshold && !m_curveElem[j]->deleted && m_curveElem[j]->header == NULL)
 			{
 				Vector V = (Vector(m_curveElem[j]->v) - V0).unit();
 				for (int k = j + 1; k < n && m_candEndPoint[i]; k++)
 				{
-					if (m_dist[i][k] < threshold && m_curveElem[k]->header != NULL)
+					if (m_dist[i][k] < threshold && !m_curveElem[k]->deleted && m_curveElem[k]->header == NULL)
 					{
 						float innerProd = V * (Vector(m_curveElem[k]->v) - V0).unit();
 						if (innerProd < inner) m_candEndPoint[i] = false;
@@ -530,7 +508,7 @@ void GyralCurve::extendCurves(curveElem *elem, float threshold, float inner1, fl
 					adjGroup = true;
 				}
 			}
-			else if(adjGroup) continue;
+			else if (adjGroup) continue;
 
 			float dev = elem->orientation * (V1 - V).unit();
 			if (((!adjGroup && dev > inner1) || (adjGroup && dev > inner2)) && minDist >= dist)
@@ -566,6 +544,158 @@ void GyralCurve::extendCurves(curveElem *elem, float threshold, float inner1, fl
 			extendCurves(m_curveElem[closestID], threshold);
 		}
 	}
+}
+
+void GyralCurve::extendCurves_dijkstra(curveElem *elem, float threshold, float inner1, float inner2)
+{
+	if (!elem->isEndPoint) return;
+	int n = m_nPoints;
+	
+	// reverse
+	if (elem->header->item[0] == elem) reverseCurveOrder(elem->header);
+	
+	// init Dijkstra path
+	vector<int> Q;
+	for (int i = 0; i < n; i++)
+	{
+		m_curveElem[i]->dijNode = -1;
+		m_curveElem[i]->dijDist = FLT_MAX;
+		m_curveElem[i]->dijEnd = false;
+	}
+	m_curveElem[elem->id]->dijNode = elem->id;
+	m_curveElem[elem->id]->dijDist = 0;
+	Q.push_back(elem->id);
+		
+	while (!Q.empty())
+	{
+		float minDist = FLT_MAX;
+		int activeID = -1;
+		for (int i = 0; i < Q.size(); i++)
+		{
+			if (m_curveElem[Q[i]]->dijDist < minDist)
+			{
+				minDist = m_curveElem[Q[i]]->dijDist;
+				activeID = Q[i];
+			}
+		}
+		Q.erase(std::remove(Q.begin(), Q.end(), activeID), Q.end()); // remove active point
+
+		Vector V(m_curveElem[activeID]->v);
+		Vector B1 = m_curveElem[activeID]->direction;
+		if (B1 * m_curveElem[activeID]->orientation < 0) B1 *= -1;
+
+		for (int i = 0; i < n; i++)
+		{
+			if (activeID == i) continue;
+
+			Vector V1(m_curveElem[i]->v);
+			float wdist = m_curveElem[activeID]->dijDist;
+			float dist = m_dist[activeID][i];
+
+			if (dist < threshold)
+			{
+				Vector B2 = m_curveElem[i]->direction;
+				
+				if (B1 * B2 < 0) B2 *= -1;
+				float v[3];
+				Coordinate::sphmean(B1.fv(), B2.fv(), v);
+				
+				float w = exp(m_gamma * ((V1 - V).unit()).cross(v).norm());
+				wdist += dist * w;
+				bool adjGroup = (m_curveElem[i]->header != NULL && m_curveElem[i]->header != elem->header);
+				
+				float dev = Vector(v) * (V1 - V).unit();
+
+				if ((!adjGroup && dev > inner1) || (adjGroup && dev > inner2))
+				{
+					if (m_curveElem[i]->dijDist > wdist)
+					{
+						m_curveElem[i]->dijDist = wdist;
+						m_curveElem[i]->dijNode = activeID;
+						if (!m_curveElem[i]->traced)
+						{
+							Q.erase(std::remove(Q.begin(), Q.end(), i), Q.end());
+							Q.push_back(i);
+							m_curveElem[i]->orientation = v;
+							if ((V1 - V) * Vector(v) < 0) m_curveElem[i]->orientation *= -1;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// check if there exist valid points
+	int nValidEndPoints = 0;
+	for (int i = 0; i < n; i++)
+	{
+		if (m_curveElem[i]->header == elem->header || i == elem->id || !m_curveElem[i]->traced || m_curveElem[i]->dijNode == -1) continue;
+
+		m_curveElem[i]->dijEnd = true;
+		nValidEndPoints++;
+	}
+	
+	// find the shortest path
+	if (nValidEndPoints > 0)
+	{
+		int target = elem->id;
+		float minDist = FLT_MAX;
+		for (int i = 0; i < n; i++)
+		{
+			if (m_curveElem[i]->dijEnd && m_curveElem[i]->dijDist < minDist)
+			{
+				target = i;
+				minDist = m_curveElem[i]->dijDist;
+			}
+		}
+		
+		for (curveList *iter = m_list; iter != NULL; iter = iter->next) iter->visit = false;
+		if (testLoop(elem->header, m_curveElem[target]->header)) return;
+	
+		int id = target;
+		vector<int> trace;
+		while (id != elem->id)
+		{
+			trace.push_back(id);
+			id = m_curveElem[id]->dijNode;
+		}
+		std::reverse(trace.begin(), trace.end());
+		for (int i = 0; i < trace.size(); i++)
+		{
+			id = trace[i];
+			if (m_curveElem[id]->header != NULL)
+			{
+				elem->header->item[elem->header->item.size() - 1]->isEndPoint = true;
+				joinCurves(elem->header->item[elem->header->item.size() - 1], m_curveElem[id], 0);
+			}
+			else
+			{
+				elem->isEndPoint = false;
+				elem->header->item.push_back(m_curveElem[id]);
+				m_curveElem[id]->isEndPoint = (i == trace.size() - 1);
+				m_curveElem[id]->header = elem->header;
+				m_curveElem[id]->deleted = false;
+				m_curveElem[id]->traced = true;
+			}
+		}
+		updateOrientation(elem->header);
+	}
+}
+
+bool GyralCurve::testLoop(curveList *from, curveList *to)
+{
+	from->visit = true;
+	if (to == NULL) return false;
+	if (from == to) return true;
+	
+	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
+	{
+		if (iter->visit) continue;
+		if (iter->item[0] == from->item[0] || iter->item[0] == from->item[from->item.size() - 1] || iter->item[iter->item.size() - 1] == from->item[0] || iter->item[iter->item.size() - 1] == from->item[from->item.size() - 1])
+			if (testLoop(iter, to)) return true;
+	}
+	
+	return false;
 }
 
 void GyralCurve::updateOrientation(curveList *list, curveElem *elem)
@@ -634,17 +764,7 @@ GyralCurve::curveElem * GyralCurve::curve(curveElem *current, curveList *header,
 
 	bool adjGroup = false;
 	for (int i = 0; i < n; i++)
-	//for (int i = n - 1; i >= 0; i--)
 	{
-		// prevent a "large" u-turn curve
-		/*if (m_curveElem[i]->header == header)
-		{
-			if (distCurveElem(m_curveElem[i], current) > threshold * 5.0)
-			{
-				closestID = -1;
-				break;
-			}
-		}*/
 		if (m_curveElem[i]->deleted) continue;
 
 		Vector V1(m_curveElem[i]->v);
@@ -698,51 +818,228 @@ GyralCurve::curveElem * GyralCurve::curve(curveElem *current, curveList *header,
 	return current;
 }
 
+GyralCurve::curveElem * GyralCurve::curve_dijkstra(curveElem *current, curveList *header, float threshold, float inner1, float inner2)
+{
+	int n = m_nPoints;
+
+	current->traced = true;
+	current->header = header;
+	current->orientation = current->direction;
+	
+	// init Dijkstra path
+	vector<int> Q;
+	for (int i = 0; i < n; i++)
+	{
+		m_curveElem[i]->dijNode = -1;
+		m_curveElem[i]->dijDist = FLT_MAX;
+		m_curveElem[i]->dijEnd = false;
+	}
+	m_curveElem[current->id]->dijNode = current->id;
+	m_curveElem[current->id]->dijDist = 0;
+	Q.push_back(current->id);
+		
+	while (!Q.empty())
+	{
+		float minDist = FLT_MAX;
+		int activeID = -1;
+		for (int i = 0; i < Q.size(); i++)
+		{
+			if (m_curveElem[Q[i]]->dijDist < minDist)
+			{
+				minDist = m_curveElem[Q[i]]->dijDist;
+				activeID = Q[i];
+			}
+		}
+		Q.erase(std::remove(Q.begin(), Q.end(), activeID), Q.end()); // remove active point
+
+		Vector V(m_curveElem[activeID]->v);
+		Vector B1 = m_curveElem[activeID]->direction;
+		if (B1 * m_curveElem[activeID]->orientation < 0) B1 *= -1;
+
+		for (int i = 0; i < n; i++)
+		{
+			if (activeID == i) continue;
+			if (m_curveElem[i]->deleted) continue;
+
+			Vector V1(m_curveElem[i]->v);
+			float wdist = m_curveElem[activeID]->dijDist;
+			float dist = m_dist[activeID][i];
+			bool adjGroup;
+
+			if (dist < threshold)
+			{
+				Vector B2 = m_curveElem[i]->direction;
+				
+				if (B1 * B2 < 0) B2 *= -1;
+				float v[3];
+				Coordinate::sphmean(B1.fv(), B2.fv(), v);
+				
+				float w = exp(m_gamma * ((V1 - V).unit()).cross(v).norm());
+				//float w = (V1 - V).unit() * Vector(v); w = (w == 0)? FLT_MAX: exp(gamma / w);
+				wdist += dist * w;
+				adjGroup = (m_curveElem[i]->header != NULL && m_curveElem[i]->header != header);
+				
+				//float dev = m_curveElem[activeID]->orientation * (V1 - V).unit();
+				float dev = Vector(v) * (V1 - V).unit();
+				if (activeID == current->id) dev = fabs(dev);
+
+				if ((!adjGroup && dev > inner1) || (adjGroup && dev > inner2))
+				{
+					if (m_curveElem[i]->dijDist > wdist)
+					{
+						m_curveElem[i]->dijDist = wdist;
+						m_curveElem[i]->dijNode = activeID;
+						if (!m_curveElem[i]->traced)
+						//if (!m_curveElem[i]->isEndPoint)
+						{
+							Q.erase(std::remove(Q.begin(), Q.end(), i), Q.end());
+							Q.push_back(i);
+							m_curveElem[i]->orientation = v;
+							if ((V1 - V) * Vector(v) < 0) m_curveElem[i]->orientation *= -1;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// check if there exist traced points
+	int nValidEndPoints = 0;
+	int target = current->id;
+	for (int i = 0; i < n; i++)
+	{
+		if (m_curveElem[i]->dijNode == -1 || current->id == i || !m_curveElem[i]->traced) continue;
+
+		m_curveElem[i]->dijEnd = true;
+		nValidEndPoints++;
+	}
+	if (nValidEndPoints > 0)
+	{
+		// find the maximum distance of the shortest path
+		float minDist = FLT_MAX;
+		for (int i = 0; i < n; i++)
+		{
+			if (m_curveElem[i]->dijEnd && m_curveElem[i]->dijDist < minDist)
+			{
+				target = i;
+				minDist = m_curveElem[i]->dijDist;
+			}
+		}
+	}
+	// if not, find valid endpoints
+	else
+	{
+		// global endpoints
+		for (int i = 0; i < n; i++)
+		{
+			if (m_curveElem[i]->dijNode == -1) continue;
+
+			m_curveElem[i]->dijEnd = true;
+			for (int j = 0; j < n && m_curveElem[i]->dijEnd; j++)
+			{
+				if (i == j) continue;
+				if (m_curveElem[j]->dijNode != -1 && m_dist[i][j] < threshold)
+					m_curveElem[i]->dijEnd = (m_curveElem[i]->dijDist > m_curveElem[j]->dijDist);
+			}
+			if (m_curveElem[i]->dijEnd && (m_candEndPoint[i] || m_curveElem[i]->isEndPoint)) nValidEndPoints++;
+		}
+		// local endpoints
+		if (nValidEndPoints == 0)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				if (m_curveElem[i]->dijNode == -1 || !m_candEndPoint[i] || !m_curveElem[i]->isEndPoint) continue;
+
+				m_curveElem[i]->dijEnd = true;
+				nValidEndPoints++;
+			}
+		}
+		// if not, find local maximum
+		if (nValidEndPoints == 0)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				if (m_curveElem[i]->dijNode == -1) continue;
+
+				m_curveElem[i]->dijEnd = true;
+				for (int j = 0; j < n && m_curveElem[i]->dijEnd; j++)
+				{
+					if (i == j) continue;
+					if (m_curveElem[j]->dijNode != -1 && m_dist[i][j] < threshold)
+						m_curveElem[i]->dijEnd = (m_curveElem[i]->dijDist > m_curveElem[j]->dijDist);
+				}
+			}
+		}
+		// find the maximum distance of the shortest path
+		float maxDist = 0;
+		for (int i = 0; i < n; i++)
+		{
+			if (m_curveElem[i]->dijEnd && m_curveElem[i]->dijDist > maxDist)
+			{
+				target = i;
+				maxDist = m_curveElem[i]->dijDist;
+			}
+		}
+	}
+	
+	bool isEndPointMarked = false;
+	int id = target;
+	while (id != current->id)
+	{
+		if (!m_curveElem[id]->traced)
+		{
+			if (!isEndPointMarked)
+			{
+				isEndPointMarked = true;
+				m_curveElem[id]->isEndPoint = true;
+			}
+			header->item.push_back(m_curveElem[id]);
+			m_curveElem[id]->header = header;
+			m_curveElem[id]->traced = true;
+			m_candEndPoint[id] = false;
+		}
+		id = m_curveElem[id]->dijNode;
+	}
+	header->item.push_back(current);
+	std::reverse(header->item.begin(), header->item.end());
+	m_candEndPoint[current->id] = false;
+	
+	if (header->item.size() > 1) updateOrientation(header);
+
+	return m_curveElem[target];
+}
+
 void GyralCurve::refineCurves(float threshold)
 {
-	memset(m_candEndPoint,0,sizeof(bool) * m_nPoints);
+	memset(m_candEndPoint, 0, sizeof(bool) * m_nPoints);
 	int current, previous;
 
 	// extend endpoints
 	do
 	{
+		previous = current;
+		// separate branches
 		for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 		{
 			curveElem *elem1 = iter->item[iter->item.size() - 1];
+			if (elem1->isEndPoint) extendCurves_dijkstra(elem1, threshold);
+			separateBranch();
 			curveElem *elem2 = iter->item[0];
-			if (elem1->isEndPoint) extendCurves(elem1, threshold);
-			if (elem2->isEndPoint) extendCurves(elem2, threshold);
+			if (elem2->isEndPoint) extendCurves_dijkstra(elem2, threshold);
+			separateBranch();
 		}
+		current = nCurves();
 	}
 	while (previous != current);
-	
+		
 	// connect closest endpoints
-	joinCurves(threshold);
-
+	//joinCurves(threshold);
+	
 	// separate branches
 	separateBranch();
-
-	// update length of the curves
-	vector<float> hist;
-	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
-	{
-		iter->length = 0;
-		for (int i = 1; i < iter->item.size(); i++)
-			iter->length += (Vector(iter->item[i]->v) - Vector(iter->item[i - 1]->v)).norm();
-		if (iter->item[0]->isEndPoint || iter->item[iter->item.size() - 1]->isEndPoint)
-			hist.push_back(iter->length);
-	}
-	/*sort(hist.begin(), hist.end());
-	float lThreshold = hist[(int)(hist.size() * 0.1)];*/
-
+	
 	// delete a group if its arclength is below a threshold
-	current = nCurves();
-	do
-	{
-		previous = current;
-		deleteCurves(1.0f);
-	}
-	while (previous != current);
+	while (pruneCurves(1.0f));
 }
 
 void GyralCurve::joinCurves(float threshold)
@@ -827,7 +1124,12 @@ void GyralCurve::joinCurves(curveElem *elem1, curveElem *elem2, float inner)
 					list2->item[j]->header = list1;
 			}
 			updateOrientation(list1, elem2);
-			deleteCurves(list2);
+			if (list2->next != NULL) list2->next->prev = list2->prev;
+			if (list2->prev != NULL) list2->prev->next = list2->next;
+			else m_list = list2->next;
+
+			list2->item.clear();
+			delete list2;
 		}
 	}
 	else	// branch - junction point
@@ -939,8 +1241,7 @@ void GyralCurve::SimplifyCurves(float threshold, float inner)
 			{
 				Vector V1(iter->item[i - 1]->v, iter->item[i]->v);
 				Vector V2(iter->item[i]->v, iter->item[i + 1]->v);
-				float len = V1.norm();
-				arc += len;
+				arc += m_dist[i - 1][i];
 				if (V1.unit() * V2.unit() > inner && arc < threshold)
 				{
 					deleteCurveElem(iter->item[i]);
@@ -1068,7 +1369,7 @@ bool GyralCurve::testIntegrity(void)
 			|| (iter->item[0]->isJunction && iter->item[0]->header == NULL)
 			|| (!iter->item[0]->isEndPoint && !iter->item[0]->isJunction))
 		{
-			cout <<"Error: Code1 at " << iter->item[0]->id << endl;
+			cout << "Error: Code1 at " << iter->item[0]->id << endl;
 			cout << "# of points: " << iter->item.size() << endl;
 			cout << "EndPoint: " << iter->item[0]->isEndPoint << endl;
 			cout << "Junction: " << iter->item[0]->isJunction << endl;
@@ -1079,7 +1380,7 @@ bool GyralCurve::testIntegrity(void)
 			|| (iter->item[iter->item.size() - 1]->isJunction && iter->item[iter->item.size() - 1]->header == NULL)
 			|| (!iter->item[iter->item.size() - 1]->isEndPoint && !iter->item[iter->item.size() - 1]->isJunction))
 		{
-			cout <<"Error: Code2 at " << iter->item[iter->item.size() - 1]->id << endl;
+			cout << "Error: Code2 at " << iter->item[iter->item.size() - 1]->id << endl;
 			cout << "# of points: " << iter->item.size() << endl;
 			cout << "EndPoint: " << iter->item[iter->item.size() - 1]->isEndPoint << endl;
 			cout << "Junction: " << iter->item[iter->item.size() - 1]->isJunction << endl;
@@ -1089,7 +1390,10 @@ bool GyralCurve::testIntegrity(void)
 		for (int i = 1; i < iter->item.size() - 1; i++)	// intermediate points
 			if (iter->item[i]->isEndPoint || iter != iter->item[i]->header)
 			{
-				cout <<"Error: Code3 at " << iter->item[i]->id << endl;
+				cout << "Error: Code3 at " << iter->item[i]->id << endl;
+				cout << "Index: " << i + 1 << "/" << iter->item.size() << endl;
+				cout << "EndPoint: " << iter->item[i]->isEndPoint << endl;
+				cout << "Invalid Header: " << (iter != iter->item[i]->header) << endl;
 				return false;
 			}
 		for (int i = 0; i < iter->item.size(); i++)	// junction points
@@ -1098,7 +1402,7 @@ bool GyralCurve::testIntegrity(void)
 				|| (iter->item[i]->nJunctions > 0 && !iter->item[i]->isJunction)
 				|| (iter->item[i]->header == NULL && iter->item[i]->isJunction))
 			{
-				cout <<"Error: Code " << iter->item[i]->id;
+				cout << "Error: Code";
 				if (iter->item[i]->isEndPoint && iter->item[i]->isJunction)
 					cout << "4-1";
 				if (iter->item[i]->nJunctions == 0 && iter->item[i]->isJunction)

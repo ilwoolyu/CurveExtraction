@@ -41,6 +41,9 @@ private:
 		{
 			return (Vector(v) < Vector(elem.v));
 		};
+		int dijNode;	// Dijkstra previous node
+		bool dijEnd;	// Dijkstra target node (endpoint or junction)
+		float dijDist;	// Dijkstra travel distance
 	};
 	struct curveList
 	{
@@ -48,6 +51,7 @@ private:
 		curveList *next;
 		curveList *prev;
 		float length;
+		bool visit;		// loop test
 	};
 
 	bool *m_candEndPoint;	// candidate
@@ -59,6 +63,7 @@ private:
 	Geodesic *m_geodesic;
 	float **m_dist;
 	float m_threshold1, m_threshold2, m_threshold3;
+	float m_gamma;
 
 public:
 	SulcalCurve(void);
@@ -87,16 +92,20 @@ private:
 	void joinCurves(curveElem *elem1, curveElem *elem2, float inner = cos(PI / 4.0f));
 	void joinCurves(float threshold);
 	void extendCurves(curveElem *elem, float threshold, float inner1 = cos(PI / 3.0f), float inner2 = cos(PI / 3.0f));
+	void extendCurves_dijkstra(curveElem *elem, float threshold, float inner1 = cos(PI / 3.0f), float inner2 = cos(PI / 3.0f));
 	void deleteCurves(curveList *list);
-	void deleteCurves(float threshold);
 	void deleteCurveElem(curveElem *elem);
 	void deleteNearestPoints(float threshold);
 	void deleteNearestPoints(curveList *list, float threshold);
-	void updateOrientation(curveList *list, curveElem *_elem = NULL);
+	void deleteJunction(curveElem *elem, curveList *parent);
 	void separateBranch(void);
-	void findHeader(curveElem *elem);
+	void updateOrientation(curveList *list, curveElem *_elem = NULL);
+	void updateCurveLength(void);
+	bool pruneCurves(float threshold);
+	bool testLoop(curveList *from, curveList *to);
 	float distCurveElem(curveElem *elem1, curveElem *elem2);
 	curveElem * closestPoint(curveElem *elem, curveList *list);
 	curveElem * curve(curveElem *current, curveList *header, float threshold, float inner1 = cos(PI / 4.0f), float inner2 = 0);
+	curveElem * curve_dijkstra(curveElem *current, curveList *header, float threshold, float inner1 = cos(PI / 4.0f), float inner2 = 0);
 };
 
