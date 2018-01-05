@@ -10,7 +10,8 @@ curve files (.scurve or .gcurve): indices of the selected sulcal/gyral points
 CurveExtraction -i input.vtk -o output --sulcus
 
 ## Requirements
-MeshLib (general mesh processing), SlicerExecutionModel (CLI)
+<a href="https://github.com/ilwoolyu/MeshLib" target="_blank">MeshLib (general mesh processing)</a><br />
+<a href="https://github.com/ilwoolyu/SlicerExecutionModel" target="_blank">SlicerExecutionModel (CLI)</a>
 
 ## References
 Lyu, I., Kim, S., Woodward, N., Styner, M., Landman, B., TRACE: A Topological Graph Representation for Automatic Sulcal Curve Extraction, IEEE Transactions on Medical Imaging, in press.<br />
