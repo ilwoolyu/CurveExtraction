@@ -99,9 +99,9 @@
 				<description>Curve simplification to reduce the number of sulcal points of the delineated curves</description>
 			</boolean>
 			<boolean>
-				<longflag>junction</longflag>
+				<longflag>nojunction</longflag>
 				<name>junc</name>
-				<description>Inclusion of junction points in the output curves</description>
+				<description>Exclusion of junction points in the output file (scurve or gcurve)</description>
 			</boolean>
 			<boolean>
 				<longflag>noVtk</longflag>
