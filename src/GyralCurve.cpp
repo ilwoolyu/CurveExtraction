@@ -145,11 +145,12 @@ GyralCurve::~GyralCurve(void)
 	}
 }
 
-void GyralCurve::setThreshold(float threshold1, float threshold2, float threshold3)
+void GyralCurve::setThreshold(float threshold1, float threshold2, float threshold3, float threshold4)
 {
 	m_threshold1 = threshold1;
 	m_threshold2 = threshold2;
 	m_threshold3 = threshold3;
+	m_threshold4 = threshold4;
 }
 
 void GyralCurve::run(void)
@@ -169,7 +170,7 @@ void GyralCurve::run(void)
 	
 	cout << "Refining.. ";
 	fflush(stdout);
-	refineCurves(m_threshold1);
+	refineCurves(m_threshold1, m_threshold4);
 	cout << "Done" << endl;
 	fflush(stdout);
 
@@ -186,6 +187,14 @@ void GyralCurve::run(void)
 
 void GyralCurve::grouping(float threshold1, float threshold2, float threshold3)
 {
+	/*do
+	{
+		group = current;
+		deleteNearestPoints(1.5f);
+		current = delineation(treshold);
+	}
+	while (group != current);*/
+
 	int nCurvePrev = 0, nCurve = 0;
 	do
 	{
@@ -246,6 +255,8 @@ int GyralCurve::delineation(float threshold1, float threshold2, float threshold3
 	curveList *prev;
 	for (prev = m_list; prev != NULL && prev->next != NULL; prev = prev->next);
 
+	//for (int i = 0; i < n; i++)
+	//for (int i = n - 1; i >= 0; i--)
 	for (int c = 0; c < endPointList.size(); c++)
 	{
 		int i = endPointList[c].id;
@@ -303,6 +314,8 @@ bool GyralCurve::pruneCurves(float threshold)
 	{
 		if (iter->item[0]->isEndPoint || iter->item[iter->item.size() - 1]->isEndPoint)
 		{
+			/*for (int i = 0; i < iter->item.size(); i++)
+				m_candEndPoint[iter->item[i]->id] = true;*/
 			curveElem *elem = NULL;
 			if (iter->item[0]->isJunction) elem = iter->item[0];
 			if (iter->item[iter->item.size() - 1]->isJunction) elem = iter->item[iter->item.size() - 1];
@@ -337,12 +350,17 @@ bool GyralCurve::pruneCurves(float threshold)
 void GyralCurve::updateCurveLength(void)
 {
 	// update length of the curves
+	//vector<float> hist;
 	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 	{
 		iter->length = 0;
 		for (int i = 1; i < iter->item.size(); i++)
 			iter->length += m_dist[iter->item[i]->id][iter->item[i - 1]->id];
+		/*if (iter->item[0]->isEndPoint || iter->item[iter->item.size() - 1]->isEndPoint)
+			hist.push_back(iter->length);*/
 	}
+	/*sort(hist.begin(), hist.end());
+	float lThreshold = hist[(int)(hist.size() * 0.1)];*/
 }
 
 void GyralCurve::deleteJunction(curveElem *elem, curveList *parent)
@@ -667,6 +685,12 @@ void GyralCurve::extendCurves_dijkstra(curveElem *elem, float threshold, float i
 			{
 				elem->header->item[elem->header->item.size() - 1]->isEndPoint = true;
 				joinCurves(elem->header->item[elem->header->item.size() - 1], m_curveElem[id], 0);
+				/*if (m_curveElem[id]->isEndPoint)
+				{
+					curveElem *end = m_curveElem[id]->header->item[m_curveElem[id]->header->item.size() - 1];
+					if (end != m_curveElem[id] && !end->isJunction)
+						extendCurves_dijkstra(end, threshold);
+				}*/
 			}
 			else
 			{
@@ -764,7 +788,17 @@ GyralCurve::curveElem * GyralCurve::curve(curveElem *current, curveList *header,
 
 	bool adjGroup = false;
 	for (int i = 0; i < n; i++)
+	//for (int i = n - 1; i >= 0; i--)
 	{
+		// prevent a "large" u-turn curve
+		/*if (m_curveElem[i]->header == header)
+		{
+			if (distCurveElem(m_curveElem[i], current) > threshold * 5.0)
+			{
+				closestID = -1;
+				break;
+			}
+		}*/
 		if (m_curveElem[i]->deleted) continue;
 
 		Vector V1(m_curveElem[i]->v);
@@ -1009,7 +1043,7 @@ GyralCurve::curveElem * GyralCurve::curve_dijkstra(curveElem *current, curveList
 	return m_curveElem[target];
 }
 
-void GyralCurve::refineCurves(float threshold)
+void GyralCurve::refineCurves(float threshold1, float threshold2)
 {
 	memset(m_candEndPoint, 0, sizeof(bool) * m_nPoints);
 	int current, previous;
@@ -1022,10 +1056,10 @@ void GyralCurve::refineCurves(float threshold)
 		for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 		{
 			curveElem *elem1 = iter->item[iter->item.size() - 1];
-			if (elem1->isEndPoint) extendCurves_dijkstra(elem1, threshold);
+			if (elem1->isEndPoint) extendCurves_dijkstra(elem1, threshold1);
 			separateBranch();
 			curveElem *elem2 = iter->item[0];
-			if (elem2->isEndPoint) extendCurves_dijkstra(elem2, threshold);
+			if (elem2->isEndPoint) extendCurves_dijkstra(elem2, threshold1);
 			separateBranch();
 		}
 		current = nCurves();
@@ -1039,7 +1073,7 @@ void GyralCurve::refineCurves(float threshold)
 	separateBranch();
 	
 	// delete a group if its arclength is below a threshold
-	while (pruneCurves(1.0f));
+	while (pruneCurves(threshold2));
 }
 
 void GyralCurve::joinCurves(float threshold)

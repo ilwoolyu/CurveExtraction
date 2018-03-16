@@ -62,7 +62,7 @@ private:
 	curveElem **m_curveElem;
 	Geodesic *m_geodesic;
 	float **m_dist;
-	float m_threshold1, m_threshold2, m_threshold3;
+	float m_threshold1, m_threshold2, m_threshold3, m_threshold4;
 	float m_gamma;
 
 public:
@@ -73,14 +73,14 @@ public:
 	~SulcalCurve(void);
 	void run(void);
 	void grouping(float threshold1 = 4.0f, float threshold2 = 2.5f, float threshold3 = 2.0f);	// th1: delineation, th2: neighbor to be deleted, th3: endpoint radius
-	void refineCurves(float threshold = 5.0f);
+	void refineCurves(float threshold1 = 5.0f, float threshold2 = 5.0f);
 	void getSeedPoint(bool *isValley);
 	void saveSulcalPoint(const char *filename);
 	void saveSulcalCurves(const char *filename, bool incJunc = true);
 	void saveVTK(const char *filename);
 	void showInfo(void);
 	void SimplifyCurves(float threshold = 4.5f, float inner = cos(PI / 10.0f));
-	void setThreshold(float threshold1, float threshold2, float threshold3);
+	void setThreshold(float threshold1, float threshold2, float threshold3, float threshold4);
 	int nCurves(void);
 	bool testIntegrity(void);
 

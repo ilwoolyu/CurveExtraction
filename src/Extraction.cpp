@@ -15,7 +15,7 @@
 #include "Extraction.h"
 #include "SurfaceUtil.h"
 
-void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, bool noVTK)
+void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, float prune, bool noVTK)
 {
 	if (!inputPoint.empty()) nThreads = 1;
 	if (sulc) se = new SulcalPoint*[nThreads];
@@ -123,7 +123,7 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			sc = new SulcalCurve(mesh, spoint, direction_s);
 			sc->getSeedPoint(isValley);
 		}
-		sc->setThreshold(nhdist, nhdist, eprad);
+		sc->setThreshold(nhdist, nhdist, eprad, prune);
 		sc->run();
 		sc->showInfo();
 		if (simp)
@@ -176,7 +176,7 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			gc = new GyralCurve(mesh, gpoint, direction_g);
 			gc->getSeedPoint(isRidge);
 		}
-		gc->setThreshold(nhdist, nhdist, eprad);
+		gc->setThreshold(nhdist, nhdist, eprad, prune);
 		gc->run();
 		gc->showInfo();
 		if (simp)

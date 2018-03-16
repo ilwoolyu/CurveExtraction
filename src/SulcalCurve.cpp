@@ -145,11 +145,12 @@ SulcalCurve::~SulcalCurve(void)
 	}
 }
 
-void SulcalCurve::setThreshold(float threshold1, float threshold2, float threshold3)
+void SulcalCurve::setThreshold(float threshold1, float threshold2, float threshold3, float threshold4)
 {
 	m_threshold1 = threshold1;
 	m_threshold2 = threshold2;
 	m_threshold3 = threshold3;
+	m_threshold4 = threshold4;
 }
 
 
@@ -162,6 +163,11 @@ void SulcalCurve::run(void)
 	cout << "Done" << endl;
 	fflush(stdout);
 
+	/*FILE *fp=fopen("left.ep","w");
+	detectEndPoints(m_threshold3, -0);
+	for (int i = 0; i < m_nPoints; i++)
+	if(m_candEndPoint[i])fprintf(fp, "%d\n",m_curveElem[i]->vid);*/
+	
 	cout << "Grouping.. ";
 	fflush(stdout);
 	grouping(m_threshold1, m_threshold2, m_threshold3);
@@ -170,9 +176,14 @@ void SulcalCurve::run(void)
 	
 	cout << "Refining.. ";
 	fflush(stdout);
-	refineCurves(m_threshold1);
+	refineCurves(m_threshold1, m_threshold4);
 	cout << "Done" << endl;
 	fflush(stdout);
+	
+	/*for (int i = 0; i < m_nPoints; i++)
+		m_curveElem[i]->deleted = false;
+	grouping(m_threshold1, m_threshold2, m_threshold3);*/
+	//refineCurves(m_threshold1);
 	
 	cout << "Integrity test.. ";
 	fflush(stdout);
@@ -187,6 +198,14 @@ void SulcalCurve::run(void)
 
 void SulcalCurve::grouping(float threshold1, float threshold2, float threshold3)
 {
+	/*do
+	{
+		group = current;
+		deleteNearestPoints(1.5f);
+		current = delineation(treshold);
+	}
+	while (group != current);*/
+
 	int nCurvePrev = 0, nCurve = 0;
 	do
 	{
@@ -241,6 +260,9 @@ int SulcalCurve::delineation(float threshold1, float threshold2, float threshold
 	for (int i = 0; i < n; i++)
 	{
 		if (!m_candEndPoint[i]) continue;
+		//if (m_curveElem[i]->vid == 20667 || m_curveElem[i]->vid == 19008) {ii=i;m_candEndPoint[ii]=false;}
+		//if (m_curveElem[i]->vid == 94236 || m_curveElem[i]->vid == 93185) {ii=i;m_candEndPoint[ii]=false;}
+		//if (m_curveElem[i]->vid == 88829) continue;
 		endPointList.push_back(*m_curveElem[i]);
 	}
 	sort(endPointList.begin(), endPointList.end());
@@ -248,12 +270,16 @@ int SulcalCurve::delineation(float threshold1, float threshold2, float threshold
 	curveList *prev;
 	for (prev = m_list; prev != NULL && prev->next != NULL; prev = prev->next);
 
+	//for (int i = 0; i < n; i++)
+	//for (int i = n - 1; i >= 0; i--)
 	for (int c = 0; c < endPointList.size(); c++)
+	//for (int c = endPointList.size() - 1; c >= 0; c--)
 	{
 		int i = endPointList[c].id;
 		if (m_curveElem[i]->traced || !m_candEndPoint[i] || m_curveElem[i]->deleted || m_curveElem[i]->header != NULL) continue;
 		curveList *list = new curveList;
 		curveElem *endPoint = curve_dijkstra(m_curveElem[i], list, threshold1);
+		//curveElem *endPoint = curve(m_curveElem[i], list, threshold1);
 		if (list->item.size() == 1)
 		{
 			deleteCurveElem(m_curveElem[i]);
@@ -270,6 +296,8 @@ int SulcalCurve::delineation(float threshold1, float threshold2, float threshold
 		m_curveElem[i]->isEndPoint = true;
 
 		if (endPoint->header != list) joinCurves(list->item[list->item.size() -1], endPoint);
+
+		//deleteNearestPoints(list, threshold2);
 	}
 
 	return nCurves();
@@ -300,6 +328,8 @@ bool SulcalCurve::pruneCurves(float threshold)
 	{
 		if (iter->item[0]->isEndPoint || iter->item[iter->item.size() - 1]->isEndPoint)
 		{
+			/*for (int i = 0; i < iter->item.size(); i++)
+				m_candEndPoint[iter->item[i]->id] = true;*/
 			curveElem *elem = NULL;
 			if (iter->item[0]->isJunction) elem = iter->item[0];
 			if (iter->item[iter->item.size() - 1]->isJunction) elem = iter->item[iter->item.size() - 1];
@@ -333,12 +363,18 @@ bool SulcalCurve::pruneCurves(float threshold)
 
 void SulcalCurve::updateCurveLength(void)
 {
+	// update length of the curves
+	//vector<float> hist;
 	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 	{
 		iter->length = 0;
 		for (int i = 1; i < iter->item.size(); i++)
 			iter->length += m_dist[iter->item[i]->id][iter->item[i - 1]->id];
+		/*if (iter->item[0]->isEndPoint || iter->item[iter->item.size() - 1]->isEndPoint)
+			hist.push_back(iter->length);*/
 	}
+	/*sort(hist.begin(), hist.end());
+	float lThreshold = hist[(int)(hist.size() * 0.1)];*/
 }
 
 void SulcalCurve::deleteJunction(curveElem *elem, curveList *parent)
@@ -518,9 +554,16 @@ void SulcalCurve::extendCurves(curveElem *elem, float threshold, float inner1, f
 	
 	if (closestID != -1)
 	{
+		//m_candEndPoint[closestID] = true;
 		if (m_curveElem[closestID]->header != NULL && m_curveElem[closestID]->header != elem->header)
 		{
 			joinCurves(elem, m_curveElem[closestID], 0);
+			/*if (m_curveElem[closestID]->isEndPoint)
+			{
+				curveElem *end = elem->header->item[elem->header->item.size() - 1];
+				if (end != elem && !end->isJunction)
+					extendCurves(end, threshold);
+			}*/
 		}
 		else
 		{
@@ -658,6 +701,12 @@ void SulcalCurve::extendCurves_dijkstra(curveElem *elem, float threshold, float 
 			{
 				elem->header->item[elem->header->item.size() - 1]->isEndPoint = true;
 				joinCurves(elem->header->item[elem->header->item.size() - 1], m_curveElem[id], 0);
+				/*if (m_curveElem[id]->isEndPoint)
+				{
+					curveElem *end = m_curveElem[id]->header->item[m_curveElem[id]->header->item.size() - 1];
+					if (end != m_curveElem[id] && !end->isJunction)
+						extendCurves_dijkstra(end, threshold);
+				}*/
 			}
 			else
 			{
@@ -756,7 +805,17 @@ SulcalCurve::curveElem * SulcalCurve::curve(curveElem *current, curveList *heade
 	
 	bool adjGroup = false;
 	for (int i = 0; i < n; i++)
+	//for (int i = n - 1; i >= 0; i--)
 	{
+		// prevent a "large" u-turn curve
+		/*if (m_curveElem[i]->header == header)
+		{
+			if (distCurveElem(m_curveElem[i], current) > threshold * 5.0)
+			{
+				closestID = -1;
+				break;
+			}
+		}*/
 		if (m_curveElem[i]->deleted) continue;
 
 		Vector V1(m_curveElem[i]->v);
@@ -778,6 +837,7 @@ SulcalCurve::curveElem * SulcalCurve::curve(curveElem *current, curveList *heade
 			{
 				if (adjGroup) continue;
 				else wdist = dist * ((V1 - V).unit()).cross(current->orientation).norm();
+				//wdist = dist * (V1 - V).unit().cross(current->orientation).norm() * (m_curveElem[i]->likelihood * 2 + 1);
 			}
 
 			float dev = current->orientation * (V1 - V).unit();
@@ -800,6 +860,7 @@ SulcalCurve::curveElem * SulcalCurve::curve(curveElem *current, curveList *heade
 		}
 		else
 		{
+			//if (m_curveElem[closestID]->header == header)
 			current->isEndPoint = true;
 			return m_curveElem[closestID];
 		}
@@ -866,9 +927,11 @@ SulcalCurve::curveElem * SulcalCurve::curve_dijkstra(curveElem *current, curveLi
 				Coordinate::sphmean(B1.fv(), B2.fv(), v);
 				
 				float w = exp(m_gamma * ((V1 - V).unit()).cross(v).norm());
+				//float w = (V1 - V).unit() * Vector(v); w = (w == 0)? FLT_MAX: exp(gamma / w);
 				wdist += dist * w;
 				adjGroup = (m_curveElem[i]->header != NULL && m_curveElem[i]->header != header);
 				
+				//float dev = m_curveElem[activeID]->orientation * (V1 - V).unit();
 				float dev = Vector(v) * (V1 - V).unit();
 				if (activeID == current->id) dev = fabs(dev);
 
@@ -879,6 +942,7 @@ SulcalCurve::curveElem * SulcalCurve::curve_dijkstra(curveElem *current, curveLi
 						m_curveElem[i]->dijDist = wdist;
 						m_curveElem[i]->dijNode = activeID;
 						if (!m_curveElem[i]->traced)
+						//if (!m_curveElem[i]->isEndPoint)
 						{
 							Q.erase(std::remove(Q.begin(), Q.end(), i), Q.end());
 							Q.push_back(i);
@@ -997,7 +1061,7 @@ SulcalCurve::curveElem * SulcalCurve::curve_dijkstra(curveElem *current, curveLi
 	return m_curveElem[target];
 }
 
-void SulcalCurve::refineCurves(float threshold)
+void SulcalCurve::refineCurves(float threshold1, float threshold2)
 {
 	memset(m_candEndPoint, 0, sizeof(bool) * m_nPoints);
 	int current, previous;
@@ -1010,22 +1074,37 @@ void SulcalCurve::refineCurves(float threshold)
 		// separate branches
 		for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 		{
+			//if (iter->item[0]->vid == 82053)
+			//if (iter->item[0]->vid == 116928)
+			/*{
+			curveElem *elem1 = iter->item[0];
+			if (elem1->isEndPoint) extendCurves_dijkstra(elem1, threshold1;
+			separateBranch();
+			curveElem *elem2 = iter->item[iter->item.size() - 1];
+			if (elem2->isEndPoint) extendCurves_dijkstra(elem2, threshold1);
+			separateBranch();
+			}
+			else{*/
 			curveElem *elem1 = iter->item[iter->item.size() - 1];
-			if (elem1->isEndPoint) extendCurves_dijkstra(elem1, threshold);
+			if (elem1->isEndPoint) extendCurves_dijkstra(elem1, threshold1);
 			separateBranch();
 			curveElem *elem2 = iter->item[0];
-			if (elem2->isEndPoint) extendCurves_dijkstra(elem2, threshold);
+			if (elem2->isEndPoint) extendCurves_dijkstra(elem2, threshold1);
 			separateBranch();
+			//}
 		}
 		current = nCurves();
 	}
 	while (previous != current);
 
+	// connect closest endpoints
+	//joinCurves(threshold);
+
 	// separate branches
 	separateBranch();
 
 	// delete a group if its arclength is below a threshold
-	while (pruneCurves(5.0f));
+	while (pruneCurves(threshold2));
 }
 
 void SulcalCurve::joinCurves(float threshold)

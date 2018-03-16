@@ -35,11 +35,12 @@ int main(int argc, char *argv[])
 	cout << "- Threshold for line simplification: " << lsThreshold << endl;
 	cout << "- Radius for end point detection: " << eprad << endl;
 	cout << "- Geodesic distance for curve delineation: " << nhdist << endl;
+	cout << "- Pruning distance: " << prune << endl;
 	cout << "- Inclusion of junction points: " << junc << endl;
 	cout << "- Number of OpenMP threads: " << nThreads << endl;
 	cout << "---------------------------------" << endl;
 
-	extraction(input, output, inputPoint, interm, sseed, gseed, sulc, gyr, simp, iter, iterTensor, junc, nThreads, eprad, nhdist, lsThreshold, noVtk);
+	extraction(input, output, inputPoint, interm, sseed, gseed, sulc, gyr, simp, iter, iterTensor, junc, nThreads, eprad, nhdist, lsThreshold, prune, noVtk);
 
 	return 0;
 }

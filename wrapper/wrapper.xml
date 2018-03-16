@@ -3,7 +3,7 @@
 	<title>Curve Extraction</title>
 	<version>1.0</version>
 	<contributor>Ilwoo Lyu</contributor>
-	<description>Automatic Sulcal/Gyral Curve Extraction: refer to the paper (Lyu et al.) presented at SPIE 2015 Medical Imaging for details</description>
+	<description>Automatic Sulcal/Gyral Curve Extraction: refer to the paper: IEEE Transactions on Medical Imaging for details</description>
 		<parameters>
 			<string>
 				<longflag>inputSurface</longflag>
@@ -57,6 +57,12 @@
 				<name>lsThreshold</name>
 				<description>Threshold for line simplification</description>
 				<default>2.5</default>
+			</float>
+			<float>
+				<longflag>prune</longflag>
+				<name>prune</name>
+				<description>Threshold for curve pruning</description>
+				<default>5.0</default>
 			</float>
 			<integer>
 				<longflag>smoothIter</longflag>
