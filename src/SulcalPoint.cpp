@@ -62,6 +62,7 @@ void SulcalPoint::setSeed(const float threshold)
 	for (int i = 0; i < nVertex; i++)
 	{
 		m_seed[i] = (m_curvature[i] < threshold && m_shapeIndex[i] < -0.1);
+		//m_seed[i] = (m_curvature[i] < threshold);
 		if (m_seed[i])
 		{
 			nSeed++;

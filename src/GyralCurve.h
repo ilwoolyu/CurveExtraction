@@ -13,6 +13,7 @@
 #include <vector>
 #include "Mesh.h"
 #include "Geodesic/Geodesic.h"
+#include "Geodesic/GeodesicPath.h"
 
 using namespace std;
 
@@ -77,6 +78,7 @@ public:
 	void getSeedPoint(bool *isRidge);
 	void saveGyralPoint(const char *filename);
 	void saveGyralCurves(const char *filename, bool incJunc = true);
+	void saveGeodesicPath(const char *filename);
 	void saveVTK(const char *filename);
 	void showInfo(void);
 	void SimplifyCurves(float threshold = 2.5f, float inner = cos(PI / 10.0f));

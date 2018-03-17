@@ -1341,6 +1341,42 @@ void SulcalCurve::saveSulcalCurves(const char *filename, bool incJunc)
 	fclose(fp);
 }
 
+void SulcalCurve::saveGeodesicPath(const char *filename)
+{
+	GeodesicPath gp(m_geodesic->dist(), m_mesh);
+	vector<float *> path;
+	FILE *fp = fopen(filename, "w");
+	fprintf(fp, "%d\n", nCurves());
+	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
+	{
+		for (int i = 0; i < path.size(); i++) delete [] path[i];
+		path.clear();
+		for (int i = 0; i < iter->item.size() - 1; i++)
+		{
+			m_geodesic->perform_front_propagation(iter->item[i]->vid, iter->item[i + 1]->vid);
+			gp.computeGeodesicPath(iter->item[i + 1]->vid);
+			for (int j = gp.size() - 1; j > 0; j--)
+			{
+				const float *p = gp.getPoint(j);
+				float *v = new float[3];
+				v[0] = p[0]; v[1] = p[1]; v[2] = p[2];
+				path.push_back(v);
+			}
+		}
+		const float *p = m_mesh->vertex(iter->item[iter->item.size() - 1]->vid)->fv();
+		float *v = new float[3];
+		v[0] = p[0]; v[1] = p[1]; v[2] = p[2];
+		path.push_back(v);
+		fprintf(fp, "%d\n", path.size());
+		for (int i = 0; i < path.size(); i++)
+		{
+			const float *v = path[i];
+			fprintf(fp, "%f %f %f\n", v[0], v[1], v[2]);
+		}
+	}
+	fclose(fp);
+}
+
 void SulcalCurve::saveVTK(const char *filename)
 {
 	((Mesh *)m_mesh)->saveFile(filename, "vtk", false);

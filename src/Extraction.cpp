@@ -15,7 +15,7 @@
 #include "Extraction.h"
 #include "SurfaceUtil.h"
 
-void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, float prune, bool noVTK)
+void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, float prune, bool noVTK, bool geodesic)
 {
 	if (!inputPoint.empty()) nThreads = 1;
 	if (sulc) se = new SulcalPoint*[nThreads];
@@ -148,6 +148,11 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			sprintf(sout, "%s.scurve.vtk", output.c_str());
 			sc->saveVTK(sout);
 		}
+		if (geodesic)
+		{
+			sprintf(sout, "%s.scurve.path", output.c_str());
+			sc->saveGeodesicPath(sout);
+		}
 		cout << "Done" << endl;
 		delete se[0];
 		delete [] se;
@@ -192,7 +197,9 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			if (gyr) gc->showInfo();
 			fflush(stdout);
 		}
+		fflush(stdout);
 		cout << "Writing an output file.. ";
+		fflush(stdout);
 		char gout[1024];
 		sprintf(gout, "%s.gcurve", output.c_str());
 		gc->saveGyralCurves(gout, junc);
@@ -200,6 +207,11 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 		{
 			sprintf(gout, "%s.gcurve.vtk", output.c_str());
 			gc->saveVTK(gout);
+		}
+		if (geodesic)
+		{
+			sprintf(gout, "%s.gcurve.path", output.c_str());
+			gc->saveGeodesicPath(gout);
 		}
 		cout << "Done" << endl;
 		fflush(stdout);

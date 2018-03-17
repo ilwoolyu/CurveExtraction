@@ -109,6 +109,11 @@
 				<name>noVtk</name>
 				<description>No vtk output</description>
 			</boolean>
+			<boolean>
+				<longflag>geodesic</longflag>
+				<name>geodesic</name>
+				<description>Geodesic curve path</description>
+			</boolean>
 	  	</parameters>
 	<acknowledgements></acknowledgements>
 </executable>
