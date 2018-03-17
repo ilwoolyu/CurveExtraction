@@ -3,14 +3,18 @@
 ## Description
 Automatic sulcal/gyral curve extraction on the human cortical surfaces.
 ### Input
-surface file (.vtk): triangular 3D mesh
+* surface file (.vtk): triangular 3D mesh
 ### Output
-curve files (.scurve or/and .gcurve): indices of the selected sulcal/gyral points<br />
-surface file (.vtk): triangluar 3D mesh with curve information that stores the number of branch.
+* curve files (.scurve or/and .gcurve): indices of the selected sulcal/gyral points<br />
+* surface file (.vtk): triangular 3D mesh with curve information that stores the number of branch.
 ### Usage
 The following command line will generate "output.scurve" and "output.scurve.vtk"<br />
 ```
 CurveExtraction -i input.vtk -o output --sulcus
+```
+To enable multi-thread support (OpenMP)<br />
+```
+CurveExtraction --nThreads <# of threads>
 ```
 See more information
 ```
