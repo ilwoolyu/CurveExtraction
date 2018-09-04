@@ -36,7 +36,7 @@ CurveExtraction -h
 Please refer to our papers [1,2] for technical details (theory, parameters, methodological validation, etc.).
 ## Requirements
 <a href="https://github.com/ilwoolyu/MeshLib">MeshLib (general mesh processing)</a><br />
-<a href="https://github.com/ilwoolyu/SlicerExecutionModel">SlicerExecutionModel (CLI)</a>
+<a href="https://github.com/Slicer/SlicerExecutionModel">SlicerExecutionModel (CLI)</a>
 
 ## References
 <ol>
