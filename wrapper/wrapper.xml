@@ -112,7 +112,12 @@
 			<boolean>
 				<longflag>geodesic</longflag>
 				<name>geodesic</name>
-				<description>Geodesic curve path</description>
+				<description>Output geodesic curve trajectory (Cartesian coorditates)</description>
+			</boolean>
+			<boolean>
+				<longflag>bary</longflag>
+				<name>bary</name>
+				<description>Output geodesic curve trajectory (barycentric coorditates)</description>
 			</boolean>
 	  	</parameters>
 	<acknowledgements></acknowledgements>

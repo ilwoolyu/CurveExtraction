@@ -78,7 +78,7 @@ public:
 	void getSeedPoint(bool *isRidge);
 	void saveGyralPoint(const char *filename);
 	void saveGyralCurves(const char *filename, bool incJunc = true);
-	void saveGeodesicPath(const char *filename);
+	void saveGeodesicPath(const char *filename, bool barycentric = false);
 	void saveVTK(const char *filename);
 	void showInfo(void);
 	void SimplifyCurves(float threshold = 2.5f, float inner = cos(PI / 10.0f));

@@ -27,7 +27,8 @@ CurveExtraction --nojunction
 ```
 The actual geodesic trajectories of sulcal curves can be obtained:<br />
 ```
-CurveExtraction --geodesic
+CurveExtraction --geodesic (Cartesian coordinates)
+CurveExtraction --bary (barycentric coordinates)
 ```
 See more options:
 ```

@@ -1310,37 +1310,37 @@ void GyralCurve::saveGyralCurves(const char *filename, bool incJunc)
 	fclose(fp);
 }
 
-void GyralCurve::saveGeodesicPath(const char *filename)
+void GyralCurve::saveGeodesicPath(const char *filename, bool barycentric)
 {
 	GeodesicPath gp(m_geodesic->dist(), m_mesh);
-	vector<const float *> path;
+	vector<float *> path;
 	FILE *fp = fopen(filename, "w");
 	fprintf(fp, "%d\n", nCurves());
 	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 	{
 		for (int i = 0; i < path.size(); i++) delete [] path[i];
 		path.clear();
-		for (int i = 0; i < iter->item.size() - 1; i++)
+		for (int i = 0; i < iter->item.size(); i++)
 		{
-			m_geodesic->perform_front_propagation(iter->item[i]->vid, iter->item[i + 1]->vid);
-			gp.computeGeodesicPath(iter->item[i + 1]->vid);
+			int target = min(i + 1, (int)iter->item.size() - 1);
+			m_geodesic->perform_front_propagation(iter->item[i]->vid, iter->item[target]->vid);
+			gp.computeGeodesicPath(iter->item[target]->vid);
 			for (int j = gp.size() - 1; j > 0; j--)
 			{
-				const float *p = gp.getPoint(j);
+				const float *p = (!barycentric) ? gp.getPoint(j): gp.getBarycentricPoint(j);
 				float *v = new float[3];
 				v[0] = p[0]; v[1] = p[1]; v[2] = p[2];
 				path.push_back(v);
 			}
 		}
-		const float *p = m_mesh->vertex(iter->item[iter->item.size() - 1]->vid)->fv();
-		float *v = new float[3];
-		v[0] = p[0]; v[1] = p[1]; v[2] = p[2];
-		path.push_back(v);
 		fprintf(fp, "%d\n", path.size());
 		for (int i = 0; i < path.size(); i++)
 		{
 			const float *v = path[i];
-			fprintf(fp, "%f %f %f\n", v[0], v[1], v[2]);
+			if (barycentric)
+				fprintf(fp, "%d %d %f\n", (int)v[0], (int)v[1], v[2]);
+			else
+				fprintf(fp, "%f %f %f\n", v[0], v[1], v[2]);
 		}
 	}
 	fclose(fp);

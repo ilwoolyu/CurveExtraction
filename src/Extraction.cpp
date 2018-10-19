@@ -15,7 +15,7 @@
 #include "Extraction.h"
 #include "SurfaceUtil.h"
 
-void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, float prune, bool noVTK, bool geodesic)
+void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, float prune, bool noVTK, bool geodesic, bool bary)
 {
 	if (!inputPoint.empty()) nThreads = 1;
 	if (sulc) se = new SulcalPoint*[nThreads];
@@ -151,7 +151,12 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 		if (geodesic)
 		{
 			sprintf(sout, "%s.scurve.path", output.c_str());
-			sc->saveGeodesicPath(sout);
+			sc->saveGeodesicPath(sout, false);
+		}
+		if (bary)
+		{
+			sprintf(sout, "%s.scurve.bary", output.c_str());
+			sc->saveGeodesicPath(sout, true);
 		}
 		cout << "Done" << endl;
 		delete se[0];
@@ -211,7 +216,12 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 		if (geodesic)
 		{
 			sprintf(gout, "%s.gcurve.path", output.c_str());
-			gc->saveGeodesicPath(gout);
+			gc->saveGeodesicPath(gout, false);
+		}
+		if (bary)
+		{
+			sprintf(gout, "%s.gcurve.bary", output.c_str());
+			gc->saveGeodesicPath(gout, true);
 		}
 		cout << "Done" << endl;
 		fflush(stdout);

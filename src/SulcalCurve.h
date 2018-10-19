@@ -78,7 +78,7 @@ public:
 	void getSeedPoint(bool *isValley);
 	void saveSulcalPoint(const char *filename);
 	void saveSulcalCurves(const char *filename, bool incJunc = true);
-	void saveGeodesicPath(const char *filename);
+	void saveGeodesicPath(const char *filename, bool barycentric = false);
 	void saveVTK(const char *filename);
 	void showInfo(void);
 	void SimplifyCurves(float threshold = 4.5f, float inner = cos(PI / 10.0f));
