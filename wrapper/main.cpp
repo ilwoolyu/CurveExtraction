@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	cout << "- Number of OpenMP threads: " << nThreads << endl;
 	cout << "---------------------------------" << endl;
 
-	extraction(input, output, inputPoint, interm, sseed, gseed, sulc, gyr, simp, iter, iterTensor, !junc, nThreads, eprad, nhdist, lsThreshold, prune, noVtk, geodesic, bary);
+	extraction(input, output, inputPoint, interm, sseed, gseed, sulc, gyr, simp, iter, iterTensor, !junc, nThreads, eprad, nhdist, lsThreshold, prune, noVtk, cart, bary);
 
 	return 0;
 }

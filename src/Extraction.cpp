@@ -15,7 +15,7 @@
 #include "Extraction.h"
 #include "SurfaceUtil.h"
 
-void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, float prune, bool noVTK, bool geodesic, bool bary)
+void extraction(string input, string output, string inputPoint, bool interm, float sseed, float gseed, bool sulc, bool gyr, bool simp, int iter, int iterTensor, bool junc, int nThreads, float eprad, float nhdist, float lsThreshold, float prune, bool noVTK, bool cart, bool bary)
 {
 	if (!inputPoint.empty()) nThreads = 1;
 	if (sulc) se = new SulcalPoint*[nThreads];
@@ -148,7 +148,7 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			sprintf(sout, "%s.scurve.vtk", output.c_str());
 			sc->saveVTK(sout);
 		}
-		if (geodesic)
+		if (cart)
 		{
 			sprintf(sout, "%s.scurve.cart", output.c_str());
 			sc->saveGeodesicPath(sout, false);
@@ -213,7 +213,7 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 			sprintf(gout, "%s.gcurve.vtk", output.c_str());
 			gc->saveVTK(gout);
 		}
-		if (geodesic)
+		if (cart)
 		{
 			sprintf(gout, "%s.gcurve.cart", output.c_str());
 			gc->saveGeodesicPath(gout, false);
