@@ -6,28 +6,29 @@ A proper geometric representation of the cortical regions is a fundamental task 
 ### Input
 * surface file (.vtk): triangular 3D mesh
 ### Output
-* curve files (.scurve or/and .gcurve): indices of the selected sulcal/gyral points<br />
+* curve files (.scurve or/and .gcurve): indices of the selected sulcal/gyral points
 * surface file (.vtk): triangular 3D mesh with curve information that stores the number of branch.
 ### Usage
-The following command line will generate "output.scurve" and "output.scurve.vtk"<br />
+The following command line will generate "output.scurve" and "output.scurve.vtk"
 ```
 CurveExtraction -i input.vtk -o output --sulcus
 ```
-To enable multi-thread support (OpenMP)<br />
+To enable multi-thread support (OpenMP)
 ```
 CurveExtraction --nThreads <# of threads>
 ```
-To ignore vtk output<br />
+To ignore vtk output
 ```
 CurveExtraction --novtk
 ```
-To allow only one juction point at multiple branch in output<br />
+To allow only one juction point at multiple branch in output
 ```
 CurveExtraction --nojunction
 ```
-The actual geodesic trajectories of sulcal curves can be obtained:<br />
+Note *.scurve only contains curves traced along the extracted sulcal points. The intermediate points may not be fully captured.
+To obtain the complete geodesic trajectories of sulcal curves:
 ```
-CurveExtraction --geodesic (Cartesian coordinates)
+CurveExtraction --cart (Cartesian coordinates)
 CurveExtraction --bary (barycentric coordinates)
 ```
 See more options:

@@ -110,8 +110,8 @@
 				<description>No vtk output</description>
 			</boolean>
 			<boolean>
-				<longflag>geodesic</longflag>
-				<name>geodesic</name>
+				<longflag>cart</longflag>
+				<name>cart</name>
 				<description>Output geodesic curve trajectory (Cartesian coorditates)</description>
 			</boolean>
 			<boolean>

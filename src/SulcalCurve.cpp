@@ -36,7 +36,12 @@ SulcalCurve::SulcalCurve(const Mesh *mesh, const char *valley, const float *curv
 	for (int i = 0; i < n; i++)
 	{
 		int flag;
-		fscanf(fp, "%d", &flag);
+		if (fscanf(fp, "%d", &flag) == -1)
+		{
+			cout << "Fatal error: something goes wrong during I/O processing" << endl;
+			fclose(fp);
+			exit(1);
+		}
 		isValley[i] = (bool)flag;
 	}
 	fclose(fp);
@@ -1333,7 +1338,7 @@ void SulcalCurve::saveSulcalCurves(const char *filename, bool incJunc)
 		{
 			if (iter->item[i]->isJunction && iter->item[i]->header != iter)
 				if (!incJunc) continue;	// junction
-			fprintf(fp, "%d ", iter->item[i]->vid);
+			fprintf(fp, "%d ", (int)iter->item[i]->vid);
 			nPoint++;
 		}
 		if (nPoint > 0) fprintf(fp, "\n");
@@ -1364,7 +1369,7 @@ void SulcalCurve::saveGeodesicPath(const char *filename, bool barycentric)
 				path.push_back(v);
 			}
 		}
-		fprintf(fp, "%d\n", path.size());
+		fprintf(fp, "%d\n", (int)path.size());
 		for (int i = 0; i < path.size(); i++)
 		{
 			const float *v = path[i];
@@ -1390,7 +1395,7 @@ void SulcalCurve::saveVTK(const char *filename)
 	fprintf(fp, "LINES %d %d\n", nCurve, nCurve + nElem);
 	for (curveList *iter = m_list; iter != NULL; iter = iter->next)
 	{
-		fprintf(fp, "%d ", iter->item.size());
+		fprintf(fp, "%d ", (int)iter->item.size());
 		for (int i = 0; i < iter->item.size(); i++)
 		{
 			fprintf(fp, "%d ", iter->item[i]->vid);

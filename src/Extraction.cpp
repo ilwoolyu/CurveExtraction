@@ -150,7 +150,7 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 		}
 		if (geodesic)
 		{
-			sprintf(sout, "%s.scurve.path", output.c_str());
+			sprintf(sout, "%s.scurve.cart", output.c_str());
 			sc->saveGeodesicPath(sout, false);
 		}
 		if (bary)
@@ -215,7 +215,7 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 		}
 		if (geodesic)
 		{
-			sprintf(gout, "%s.gcurve.path", output.c_str());
+			sprintf(gout, "%s.gcurve.cart", output.c_str());
 			gc->saveGeodesicPath(gout, false);
 		}
 		if (bary)
