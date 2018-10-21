@@ -12,7 +12,6 @@ set(
 	${CMAKE_SOURCE_DIR}/src/SulcalPoint.cpp
 	${CMAKE_SOURCE_DIR}/src/Extraction.cpp
 	)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ~/bin)
 
 add_executable(
 	CurveExtraction
