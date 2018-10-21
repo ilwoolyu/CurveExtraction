@@ -19,7 +19,7 @@ CurveExtraction --nThreads <# of threads>
 ```
 To ignore vtk output
 ```
-CurveExtraction --novtk
+CurveExtraction --noVtk
 ```
 To allow only one juction point at multiple branch in output
 ```
