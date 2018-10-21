@@ -11,7 +11,7 @@ set(
 	${CMAKE_SOURCE_DIR}/src/SulcalCurve.cpp
 	${CMAKE_SOURCE_DIR}/src/SulcalPoint.cpp
 	${CMAKE_SOURCE_DIR}/src/Extraction.cpp
-	)
+)
 
 add_executable(
 	CurveExtraction
@@ -20,7 +20,7 @@ add_executable(
 )
 	
 if (OPENMP_FOUND)
-    target_compile_definitions(CurveExtraction PRIVATE _USE_OPENMP)
+	target_compile_definitions(CurveExtraction PRIVATE _USE_OPENMP)
 endif()
 
 target_link_libraries(CurveExtraction Mesh)

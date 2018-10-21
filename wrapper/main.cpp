@@ -17,8 +17,10 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+#ifdef _USE_OPENMP
 	if (nThreads == 0) nThreads = max(atoi(getenv("OMP_NUM_THREADS")), 1);
 	omp_set_num_threads(nThreads);
+#endif
 
 	cout << "----- Configuration Summary -----" << endl;
 	cout << "- Input surface: " << input << endl;
