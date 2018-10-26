@@ -40,7 +40,7 @@ See more options:
 ```
 CurveExtraction -h
 ```
-In Docker, you need a sudo acces. To run local gyrification, type:
+In Docker, you need a sudo acces. To run, type:
 ```
 sudo docker run \
             -v <LOCAL_INPUT_PATH>:/INPUT/ \
