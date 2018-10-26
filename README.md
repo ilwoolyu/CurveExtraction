@@ -8,6 +8,11 @@ A proper geometric representation of the cortical regions is a fundamental task 
 ### Output
 * curve files (.scurve or/and .gcurve): indices of the selected sulcal/gyral points
 * surface file (.vtk): triangular 3D mesh with curve information that stores the number of branch.
+### Installation
+You can download and compile the source code using <a href="https://cmake.org/">CMake</a>. Or you can pull <a href="https://hub.docker.com/r/ilwoolyu/cmorph/">docker image</a>:
+```
+docker pull ilwoolyu/cmorph:1.0
+```
 ### Usage
 The following command line will generate "output.scurve" and "output.scurve.vtk"
 ```
@@ -34,6 +39,14 @@ CurveExtraction --bary (barycentric coordinates)
 See more options:
 ```
 CurveExtraction -h
+```
+In Docker, you need a sudo acces. To run local gyrification, type:
+```
+sudo docker run \
+            -v <LOCAL_INPUT_PATH>:/INPUT/ \
+            -v <LOCAL_OUTPUT_PATH>:/OUTPUT/ \
+            --rm ilwoolyu/cmorph:1.0 \
+            CurveExtraction -i /INPUT/input.vtk -o /OUTPUT/output --sulcus
 ```
 Please refer to our papers [1,2] for technical details (theory, parameters, methodological validation, etc.).
 ## Requirements
