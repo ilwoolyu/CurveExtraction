@@ -66,6 +66,6 @@ Please refer to our papers [[1](#ref1),[2](#ref2)] for technical details (theory
 
 ## References
 <ol>
-<a id="ref1"></a>[1] <li>Lyu, I., Kim, S., Woodward, N., Styner, M., Landman, B., <a href="http://dx.doi.org/10.1109/TMI.2017.2787589">TRACE: A Topological Graph Representation for Automatic Sulcal Curve Extraction</a>, <i>IEEE Transactions on Medical Imaging</i>, 37(7), 1653-1663, 2018.</li>
-<a id="ref2"></a>[2] <li>Lyu, I., Kim, S., Styner, M., <a href="http://dx.doi.org/10.1117/12.2078291">Automatic Sulcal Curve Extraction on the Human Cortical Surface</a>, <i>SPIE Medical Imaging 2015</i>, SPIE9413, 94130P-1-94130P-7.</li>
+<li><a id="ref1"></a>Lyu, I., Kim, S., Woodward, N., Styner, M., Landman, B., <a href="http://dx.doi.org/10.1109/TMI.2017.2787589">TRACE: A Topological Graph Representation for Automatic Sulcal Curve Extraction</a>, <i>IEEE Transactions on Medical Imaging</i>, 37(7), 1653-1663, 2018.</li>
+<li><a id="ref2"></a>Lyu, I., Kim, S., Styner, M., <a href="http://dx.doi.org/10.1117/12.2078291">Automatic Sulcal Curve Extraction on the Human Cortical Surface</a>, <i>SPIE Medical Imaging 2015</i>, SPIE9413, 94130P-1-94130P-7.</li>
 </ol>
