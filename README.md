@@ -20,27 +20,30 @@ The following command line will generate "output.scurve" and "output.scurve.vtk"
 ```
 $ CurveExtraction -i input.vtk -o output --sulcus
 ```
-To enable multi-thread support (OpenMP)
-```
-$ CurveExtraction --nThreads <# of threads>
-```
-To ignore vtk output
-```
-$ CurveExtraction --noVtk
-```
-To allow only one juction point at multiple branch in output
+By default, a junction point appears in every branch it belongs to. To allow only one juction point in output:
 ```
 $ CurveExtraction --nojunction
 ```
-Note *.scurve only contains curves traced along the extracted sulcal points. The intermediate points may not be fully captured. *These outputs are not recommended for detailed curve representations.*
+To applying spatial or shape operator smoothing:
+```
+$ CurveExtraction --smoothIter <# of iters> --smoothTensorIter <# of iters>
+```
 To obtain the complete geodesic trajectories of sulcal curves:
 ```
 $ CurveExtraction --cart (Cartesian coordinates)
 $ CurveExtraction --bary (barycentric coordinates)
 ```
-To applying spatial or shape operator smoothing:
+>Note: *.scurve only contains curves traced along the extracted sulcal points. The intermediate points may not be fully captured. *These outputs are not recommended for detailed curve representations.*
+
+To ignore vtk output
 ```
-$ CurveExtraction --smoothIter <# of iters> --smoothTensorIter <# of iters>
+$ CurveExtraction --noVtk
+```
+>Note: vtk outputs are designed for visual quality check.
+
+To enable multi-thread support (OpenMP)
+```
+$ CurveExtraction --nThreads <# of threads>
 ```
 See more options:
 ```
