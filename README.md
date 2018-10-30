@@ -32,16 +32,16 @@ $ CurveExtraction --smoothIter <# of iters> --smoothTensorIter <# of iters>
 ```
 To obtain the complete geodesic trajectories of sulcal curves:
 ```
-$ CurveExtraction --cart (Cartesian coordinates)
-$ CurveExtraction --bary (barycentric coordinates)
+$ CurveExtraction --cart (Cartesian coordinates: x-y-z)
+$ CurveExtraction --bary (barycentric coordinates: vert IDs and coefficient)
 ```
->**Note**: *.scurve only contains curves traced along the extracted sulcal points. The intermediate points may not be fully captured. *These outputs are not recommended for detailed curve representations.*
+>**Note**: *scurve* outputs contain curves traced *ONLY* along the extracted sulcal points. The intermediate points may not be fully captured. These scurve outputs are *NOT* recommended for detailed curve representations. Please use *cart* or *bary* outputs instead.
 
 To ignore vtk output
 ```
 $ CurveExtraction --noVtk
 ```
->**Note**: vtk outputs are designed for visual quality check.
+>**Note**: *vtk* outputs are designed for visual quality check.
 
 To enable multi-thread support (OpenMP)
 ```
