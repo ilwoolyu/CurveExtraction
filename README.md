@@ -1,7 +1,8 @@
-# TRACE
+# Topological Graph Representation for Automatic Sulcal Curve Extraction
 
 ## Description
 A proper geometric representation of the cortical regions is a fundamental task for cortical shape analysis and landmark extraction. However, a significant challenge has arisen due to the highly variable, convoluted cortical folding patterns. Here, we propose a novel topological graph representation for automatic sulcal curve extraction (TRACE). In practice, the reconstructed surface suffers from noise influences introduced during image acquisition/surface reconstruction. In the presence of noise on the surface, TRACE determines stable sulcal fundic regions by employing the line simplification method that prevents the sulcal folding pattern from being significantly smoothed out. The sulcal curves are then traced over the connected graph in the determined regions by the Dijkstra’s shortest path algorithm.
+
 ![image](https://user-images.githubusercontent.com/9325798/47695186-d2222880-dbce-11e8-9dc3-513faed8a40b.png)
 
 ## Installation
