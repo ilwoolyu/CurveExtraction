@@ -58,10 +58,11 @@ private:
 	bool *m_candEndPoint;	// candidate
 	bool *m_gyralPoint;	// grouped points
 	int m_nPoints;
+	int m_nThreads;
 	curveList *m_list;
 	const Mesh *m_mesh;
 	curveElem **m_curveElem;
-	Geodesic *m_geodesic;
+	Geodesic **m_geodesic;
 	float **m_dist;
 	float m_threshold1, m_threshold2, m_threshold3, m_threshold4;
 	float m_gamma;
@@ -69,8 +70,8 @@ private:
 public:
 	GyralCurve(void);
 	GyralCurve(const char *mesh, const bool *ridge);
-	GyralCurve(const Mesh *mesh, const char *ridge, const float *curvature = NULL, const float *likelihood = NULL);
-	GyralCurve(const Mesh *mesh, const bool *ridge, const float *curvature = NULL, const float *likelihood = NULL);
+	GyralCurve(const Mesh *mesh, const char *ridge, int nThreads = 1, const float *curvature = NULL, const float *likelihood = NULL);
+	GyralCurve(const Mesh *mesh, const bool *ridge, int nThreads = 1, const float *curvature = NULL, const float *likelihood = NULL);
 	~GyralCurve(void);
 	void run(void);
 	void grouping(float threshold1 = 2.5f, float threshold2 = 2.5f, float threshold3 = 2.0f);	// th1: delineation, th2: neighbor to be deleted, th3: endpoint radius

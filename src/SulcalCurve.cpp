@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstring>
 #include <float.h>
+#include <omp.h>
 #include "Geom.h"
 #include "SulcalCurve.h"
 
@@ -24,10 +25,13 @@ SulcalCurve::SulcalCurve(const char *mesh, const bool *valley)
 {
 }
 
-SulcalCurve::SulcalCurve(const Mesh *mesh, const char *valley, const float *curvature, const float *likelihood)
+SulcalCurve::SulcalCurve(const Mesh *mesh, const char *valley, int nThreads, const float *curvature, const float *likelihood)
 {
 	m_mesh = mesh;
-	m_geodesic = new Geodesic(m_mesh);
+	m_nThreads = nThreads;
+	m_geodesic = new Geodesic*[m_nThreads];
+	for (int i = 0; i < m_nThreads; i++)
+		m_geodesic[i] = new Geodesic(m_mesh);
 	int n = m_mesh->nVertex();
 	m_list = NULL;
 
@@ -86,10 +90,13 @@ SulcalCurve::SulcalCurve(const Mesh *mesh, const char *valley, const float *curv
 	delete [] isValley;
 }
 
-SulcalCurve::SulcalCurve(const Mesh *mesh, const bool *valley, const float *curvature, const float *likelihood)
+SulcalCurve::SulcalCurve(const Mesh *mesh, const bool *valley, int nThreads, const float *curvature, const float *likelihood)
 {
 	m_mesh = mesh;
-	m_geodesic = new Geodesic(m_mesh);
+	m_nThreads = nThreads;
+	m_geodesic = new Geodesic*[m_nThreads];
+	for (int i = 0; i < m_nThreads; i++)
+		m_geodesic[i] = new Geodesic(m_mesh);
 	int n = m_mesh->nVertex();
 	m_list = NULL;
 	
@@ -139,7 +146,9 @@ SulcalCurve::~SulcalCurve(void)
 	for (int i = 0; i < m_nPoints; i++)
 		delete [] m_dist[i];
 	delete [] m_dist;
-	delete m_geodesic;
+	for (int i = 0; i < m_nThreads; i++)
+		delete m_geodesic[i];
+	delete [] m_geodesic;
 
 	curveList *iter = m_list;
 	while (iter != NULL)
@@ -157,7 +166,6 @@ void SulcalCurve::setThreshold(float threshold1, float threshold2, float thresho
 	m_threshold3 = threshold3;
 	m_threshold4 = threshold4;
 }
-
 
 void SulcalCurve::run(void)
 {
@@ -468,19 +476,21 @@ void SulcalCurve::detectNearestPoints(float threshold)
 	m_dist = new float*[m_nPoints];
 	for (int i = 0; i < m_nPoints; i++)
 		m_dist[i] = new float[m_nPoints];
-		
+	int threadID = 0;
+	#pragma omp parallel for private(threadID)
 	for (int i = 0; i < m_nPoints; i++)
 	{
-		m_geodesic->perform_front_propagation(m_curveElem[i]->vid, (double)threshold);
+		threadID = omp_get_thread_num();
+		m_geodesic[threadID]->perform_front_propagation(m_curveElem[i]->vid, (double)threshold);
 		for (int j = i; j < m_nPoints; j++)
 		{
 			// Geodesic distance
-			float dist = (float)m_geodesic->dist()[m_curveElem[j]->vid];
-			
+			float dist = (float)m_geodesic[threadID]->dist()[m_curveElem[j]->vid];
+
 			// Euclidean distance
 			//float dist = Vector(m_curveElem[i]->v, m_curveElem[j]->v).norm();
 
-			m_dist[i][j] = (dist <= threshold)? dist: FLT_MAX;
+			m_dist[i][j] = (dist <= threshold) ? dist : FLT_MAX;
 			m_dist[j][i] = m_dist[i][j];
 		}
 	}
@@ -1348,7 +1358,7 @@ void SulcalCurve::saveSulcalCurves(const char *filename, bool incJunc)
 
 void SulcalCurve::saveGeodesicPath(const char *filename, bool barycentric)
 {
-	GeodesicPath gp(m_geodesic->dist(), m_mesh);
+	GeodesicPath gp(m_geodesic[0]->dist(), m_mesh);
 	vector<float *> path;
 	FILE *fp = fopen(filename, "w");
 	fprintf(fp, "%d\n", nCurves());
@@ -1359,11 +1369,11 @@ void SulcalCurve::saveGeodesicPath(const char *filename, bool barycentric)
 		for (int i = 0; i < iter->item.size(); i++)
 		{
 			int target = min(i + 1, (int)iter->item.size() - 1);
-			m_geodesic->perform_front_propagation(iter->item[i]->vid, iter->item[target]->vid);
+			m_geodesic[0]->perform_front_propagation(iter->item[i]->vid, iter->item[target]->vid);
 			gp.computeGeodesicPath(iter->item[target]->vid);
 			if (gp.getBarycentricPoint(gp.size() - 1)[0] != iter->item[i]->vid)
 			{
-				m_geodesic->perform_front_propagation(iter->item[target]->vid, iter->item[i]->vid);
+				m_geodesic[0]->perform_front_propagation(iter->item[target]->vid, iter->item[i]->vid);
 				gp.computeGeodesicPath(iter->item[i]->vid);
 				for (int j = 0; j < gp.size() - 1; j++)
 				{

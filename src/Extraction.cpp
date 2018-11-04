@@ -115,12 +115,12 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 				fclose(fp);
 			}
 			for (int i = 1; i < nThreads; i++) delete se[i];
-			sc = new SulcalCurve(mesh, isValley, direction_s, likelihood);
+			sc = new SulcalCurve(mesh, isValley, nThreads, direction_s, likelihood);
 		}
 		else
 		{
 			char spoint[1024]; sprintf(spoint, "%s.spoint", inputPoint.c_str());
-			sc = new SulcalCurve(mesh, spoint, direction_s);
+			sc = new SulcalCurve(mesh, spoint, nThreads, direction_s);
 			sc->getSeedPoint(isValley);
 		}
 		sc->setThreshold(nhdist, nhdist, eprad, prune);
@@ -178,12 +178,12 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 				fclose(fp);
 			}
 			for (int i = 1; i < nThreads; i++) delete ge[i];
-			gc = new GyralCurve(mesh, isRidge, direction_g, likelihood);
+			gc = new GyralCurve(mesh, isRidge, nThreads, direction_g, likelihood);
 		}
 		else
 		{
 			char gpoint[1024]; sprintf(gpoint, "%s.gpoint", inputPoint.c_str());
-			gc = new GyralCurve(mesh, gpoint, direction_g);
+			gc = new GyralCurve(mesh, gpoint, nThreads, direction_g);
 			gc->getSeedPoint(isRidge);
 		}
 		gc->setThreshold(nhdist, nhdist, eprad, prune);
