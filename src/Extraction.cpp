@@ -87,14 +87,12 @@ void extraction(string input, string output, string inputPoint, bool interm, flo
 				ge[threadID]->localMaxima(i, NULL, NULL, NULL);
 				if (ge[threadID]->isGPoint(i)) isRidge[i] = true;
 			}
-			#pragma omp critical
+			#pragma omp atomic 
+			done++;
+			if (done % 1000 == 0)
 			{
-				done++;
-				if (done % 1000 == 0)
-				{
-					cout << "\r" << done << "/" << n;
-					fflush(stdout);
-				}
+				cout << "\r" << done << "/" << n;
+				fflush(stdout);
 			}
 		}
 		cout << "\r" << n  << "/" << n << endl;
