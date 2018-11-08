@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <executable>
 	<title>Curve Extraction</title>
-	<version>1.0</version>
+	<version>1.1</version>
 	<contributor>Ilwoo Lyu</contributor>
-	<description>Automatic Sulcal/Gyral Curve Extraction. Please refer to the following paper for details: Lyu et al., TRACE: A Topological Graph Representation for Automatic Sulcal Curve Extraction, IEEE Transactions on Medical Imaging.
+	<description>Automatic Sulcal/Gyral Curve Extraction. Please refer to the following paper for details: Lyu et al., TRACE: A Topological Graph Representation for Automatic Sulcal Curve Extraction, IEEE Transactions on Medical Imagingi, 37(7), 1653-1663, 2018.
         </description>
 		<parameters>
 			<string>
