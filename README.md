@@ -8,7 +8,7 @@ A proper geometric representation of the cortical regions is a fundamental task 
 ## Installation
 You can download and compile the source code using <a href="https://cmake.org/">CMake</a>. Or you can pull <a href="https://hub.docker.com/r/ilwoolyu/cmorph/">docker image</a>:
 ```
-$ docker pull ilwoolyu/cmorph:1.0
+$ docker pull ilwoolyu/cmorph
 ```
 ## Usage
 ### Input
