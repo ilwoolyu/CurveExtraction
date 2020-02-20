@@ -63,7 +63,8 @@ Please refer to our papers [[1](#ref1),[2](#ref2)] for technical details (theory
 
 ## Requirements for build
 <a href="https://github.com/ilwoolyu/MeshLib">MeshLib (general mesh processing)</a><br />
-<a href="https://github.com/Slicer/SlicerExecutionModel">SlicerExecutionModel (CLI)</a>
+~~<a href="https://github.com/Slicer/SlicerExecutionModel">SlicerExecutionModel (CLI)</a>~~<br />
+*To reduce package dependencies, CLI is now supported by <a href="https://github.com/CLIUtils/CLI11">CLI11</a>. This tool no longer uses SlicerExecutionModel. CLI11 will be automatically installed via CMake.*
 
 ## References
 <ol>

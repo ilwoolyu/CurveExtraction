@@ -1,16 +1,12 @@
 #include <cstdlib>
 #include <omp.h>
+#include "PARSE_ARGS.h"
 #include "main.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char** argv)
 {
-	PARSE_ARGS;
+	PARSE_ARGS(argc, argv);
 
-	if (argc < 2)
-	{
-		cout << "Usage: " << argv[0] << " " << "--help" << endl;
-		return -1;
-	}
 	if (!sulc && !gyr)
 	{
 		cout << "Set extraction on either sulcal or gyral curves! --sulcus / --gyrus" << endl;
