@@ -6,7 +6,7 @@ set (CMAKE_CXX_STANDARD 11)
 
 set(CurveExtraction_VERSION_MAJOR 1)
 set(CurveExtraction_VERSION_MINOR 1)
-set(CurveExtraction_VERSION_PATCH 1)
+set(CurveExtraction_VERSION_PATCH 2)
 set(CurveExtraction_VERSION
 ${CurveExtraction_VERSION_MAJOR}.${CurveExtraction_VERSION_MINOR}.${CurveExtraction_VERSION_PATCH})
 

@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 
 	if (!sulc && !gyr)
 	{
-		cout << "Set extraction on either sulcal or gyral curves! --sulcus / --gyrus" << endl;
+		cout << "Specify at least one extraction type! --sulcus / --gyrus" << endl;
 		return -1;
 	}
 

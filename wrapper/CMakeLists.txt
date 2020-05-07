@@ -24,5 +24,6 @@ add_executable(
 if (OPENMP_FOUND)
 	target_compile_definitions(CurveExtraction PRIVATE _USE_OPENMP)
 endif()
+target_compile_definitions(CurveExtraction PRIVATE TRACE_VERSION=\"v${CurveExtraction_VERSION}\")
 
 target_link_libraries(CurveExtraction Mesh)
